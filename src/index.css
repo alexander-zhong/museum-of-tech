@@ -1,0 +1,178 @@
+/* StormHacks 2026 palette: navy #101a21, orange #fc7900, blue #0278ff */
+:root {
+  --navy: #101a21;
+  --orange: #fc7900;
+  --blue: #0278ff;
+  --gray: #9ca3af;
+  --light: #e5e7eb;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--navy);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+canvas {
+  display: block;
+}
+
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  color: var(--light);
+}
+
+/* ---- start screen ---- */
+.start-screen {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, #16242e 0%, var(--navy) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.start-inner {
+  max-width: 640px;
+  padding: 24px;
+}
+
+.start-kicker {
+  color: var(--blue);
+  letter-spacing: 0.35em;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.start-title {
+  font-size: clamp(44px, 8vw, 84px);
+  line-height: 1.02;
+  letter-spacing: 0.02em;
+  color: var(--light);
+  margin-bottom: 24px;
+}
+
+.start-title .accent {
+  color: var(--orange);
+}
+
+.start-tag {
+  color: var(--gray);
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.start-cta {
+  color: var(--orange);
+  font-size: 18px;
+  letter-spacing: 0.25em;
+  animation: pulse 1.6s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+.start-controls {
+  color: var(--gray);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---- in-game ---- */
+.crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 6px rgba(252, 121, 0, 0.8);
+}
+
+.prompt {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  transform: translateX(-50%);
+  background: rgba(16, 26, 33, 0.85);
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  padding: 8px 18px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+}
+
+.room-title {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--light);
+  font-size: 26px;
+  letter-spacing: 0.18em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  border-bottom: 2px solid var(--blue);
+  padding-bottom: 8px;
+  animation: fadein 0.5s ease-out;
+}
+
+.subtitle {
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 760px;
+  width: calc(100% - 48px);
+  background: rgba(16, 26, 33, 0.9);
+  border-left: 3px solid var(--orange);
+  padding: 14px 20px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--light);
+  border-radius: 4px;
+  animation: fadein 0.3s ease-out;
+}
+
+.subtitle-speaker {
+  color: var(--orange);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
