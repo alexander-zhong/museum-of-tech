@@ -7,6 +7,7 @@ export type RoomId =
   | "bombe"
   | "pong"
   | "agc"
+  | "cs"
   | null;
 
 interface MuseumState {

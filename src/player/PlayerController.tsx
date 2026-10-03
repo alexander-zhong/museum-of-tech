@@ -6,6 +6,7 @@ import { collide, roomAt, roomTitle } from "../world/layout";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
+import { sfxFootstep } from "../systems/sfx";
 
 const SPEED = 4;
 const EYE = 1.6;
@@ -18,6 +19,8 @@ export function PlayerController() {
   const lookedAt = useRef<string | null>(null);
   const lastMove = useRef(performance.now());
   const roomTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bobPhase = useRef(0);
+  const lastStep = useRef(0);
 
   useEffect(() => {
     camera.position.set(0, EYE, 0.5);
@@ -65,8 +68,18 @@ export function PlayerController() {
         );
         camera.position.x = nx;
         camera.position.z = nz;
-        camera.position.y = EYE;
+        // head bob + footsteps
+        bobPhase.current += d * 9;
+        camera.position.y = EYE + Math.sin(bobPhase.current) * 0.035;
+        const stepBeat = Math.floor(bobPhase.current / Math.PI);
+        if (stepBeat !== lastStep.current) {
+          lastStep.current = stepBeat;
+          sfxFootstep();
+        }
         lastMove.current = performance.now();
+      } else {
+        // settle the camera when standing still
+        camera.position.y += (EYE - camera.position.y) * Math.min(1, d * 8);
       }
       // idle nag
       if (performance.now() - lastMove.current > 20000) {

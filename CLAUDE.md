@@ -18,7 +18,9 @@ Vite + React + TypeScript, React Three Fiber + drei, Zustand. No backend; static
 - `src/player/PlayerController.tsx` — pointer lock, WASD + collision, crosshair raycast (userData.interactId), E dispatch, room tracking, idle nag.
 - `src/systems/interact.ts` — interactId -> handler/prompt registry.
 - `src/systems/narration.ts` — LINES script + say(id): subtitle + optional audio. Never interrupts; non-repeatable lines play once.
-- `src/exhibits/` — one file per exhibit (Pong, Eniac, Agc, Bombe), self-contained, registered via registerInteract in useEffect.
+- `src/exhibits/` — one file per exhibit (Pong, Eniac, Agc, Bombe, CsRange), self-contained, registered via registerInteract in useEffect.
+- `src/systems/sfx.ts` — synthesized WebAudio SFX (gunshot, hit, ding, footsteps); no audio assets.
+- CsRange: Counter-Strike / Minh Le (SFU, 1999) shooting range at the end of the corridor. Pick up gun (E), left-click shoots via center raycast, 6 flip-down targets, timed rounds with best time. Shooting only active while equipped + pointer locked + walk mode.
 - `src/ui/Hud.tsx` + `src/index.css` — DOM overlay, StormHacks branding (navy #101a21, orange #fc7900, blue #0278ff).
 
 ## Conventions

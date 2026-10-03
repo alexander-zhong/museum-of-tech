@@ -35,6 +35,12 @@ export const LINES: Record<string, string> = {
   "bombe-done":
     "Message decrypted. It took Bletchley Park years of secret work. It took you one key press. History thanks you for your service.",
   idle: "You've been standing still for a while. The exhibits are over there. Any of them. Pick one.",
+  "entry-cs":
+    "Counter-Strike, 1999. Built as a Half-Life mod by Minh Le, a computing science student at this very university, between assignments. The final exhibit, and the only one made down the hall.",
+  "cs-gun":
+    "You've picked up the museum's certified replica. Targets are downrange. Point, click, prove you belong at SFU. And please don't rush B.",
+  "cs-clear":
+    "All targets down. Somewhere, a 1999 dial-up server lags out of respect. Minh Le shipped a genre-defining game as a student. You hit six plywood circles. Close enough.",
 };
 
 const played = new Set<string>();
@@ -47,6 +53,7 @@ const REPEATABLE = new Set([
   "bombe-start",
   "bombe-done",
   "idle",
+  "cs-clear",
 ]);
 
 let speaking = false;

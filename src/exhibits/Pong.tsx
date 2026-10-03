@@ -82,6 +82,11 @@ class PongGame {
     }
   }
 
+  scanlines(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+    for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
+  }
+
   draw(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = "#061006";
     ctx.fillRect(0, 0, W, H);
@@ -93,6 +98,7 @@ class PongGame {
       ctx.fillText("PONG", W / 2, 100);
       ctx.font = "13px monospace";
       ctx.fillText("PRESS  E  TO  PLAY", W / 2, 140);
+      this.scanlines(ctx);
       return;
     }
     // net
@@ -114,6 +120,7 @@ class PongGame {
         H / 2 + 40,
       );
     }
+    this.scanlines(ctx);
   }
 }
 

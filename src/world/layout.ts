@@ -16,7 +16,13 @@ export const WALL_HEIGHT = H;
 export const WALLS: Wall[] = [
   // perimeter
   { x: 0, z: 2, w: 26 + T, d: T }, // north (entry)
-  { x: 0, z: -26, w: 26 + T, d: T }, // south
+  // south wall, split with a door gap (x -1.2..1.2) into the CS range
+  { x: -7.175, z: -26, w: 11.95, d: T },
+  { x: 7.175, z: -26, w: 11.95, d: T },
+  // CS range room (x -5..5, z -26..-38)
+  { x: -5, z: -32, w: T, d: 12 },
+  { x: 5, z: -32, w: T, d: 12 },
+  { x: 0, z: -38, w: 10 + T, d: T },
   { x: -13, z: -12, w: T, d: 28 }, // west
   { x: 13, z: -12, w: T, d: 28 }, // east
   // top of rooms (separates entry hall from rooms)
@@ -74,6 +80,7 @@ export const ROOMS: RoomDef[] = [
   { id: "bombe", title: "Turing Bombe — 1940s", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
   { id: "pong", title: "Pong — 1972", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },
   { id: "agc", title: "Apollo Guidance Computer — 1969", minX: 3, maxX: 13, minZ: -26, maxZ: -15 },
+  { id: "cs", title: "Counter-Strike — 1999 · Made at SFU", minX: -5, maxX: 5, minZ: -38, maxZ: -26 },
   { id: "corridor", title: "", minX: -3, maxX: 3, minZ: -26, maxZ: -4 },
 ];
 
