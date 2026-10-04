@@ -17,6 +17,7 @@ export default function App() {
       <Canvas
         camera={{ fov: 75, near: 0.1, far: 70, position: [0, 1.6, 0.5] }}
         gl={{ antialias: true }}
+        dpr={[1, 1.5]}
       >
         <color attach="background" args={["#05060a"]} />
         <fog attach="fog" args={["#05060a", 20, 60]} />

@@ -510,8 +510,7 @@ export function CsRange() {
       </mesh>
 
       {/* range lighting */}
-      <pointLight position={[0, 3.2, -31]} color="#ffd9a0" intensity={50} distance={13} decay={1.6} />
-      <pointLight position={[0, 2.6, -36.5]} color="#fff0d0" intensity={40} distance={10} decay={1.6} />
+      <pointLight position={[0, 3.0, -33]} color="#ffe2b8" intensity={70} distance={16} decay={1.6} />
 
       {/* ---- shooting FX ---- */}
       <primitive object={tracer} />

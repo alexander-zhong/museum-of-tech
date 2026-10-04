@@ -143,7 +143,7 @@ export function Museum() {
         <planeGeometry args={[26.6, 40.6]} />
         <MeshReflectorMaterial
           color={FLOOR_COLOR}
-          resolution={512}
+          resolution={256}
           blur={[400, 120]}
           mixBlur={0.9}
           mixStrength={2.2}
