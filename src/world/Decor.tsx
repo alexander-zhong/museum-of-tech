@@ -110,53 +110,6 @@ function CeilPanel({ pos, w = 1.6, d = 0.5, color = "#dfe8ff" }: { pos: [number,
   );
 }
 
-// ---- hanging banner with canvas typography ----
-function Banner({
-  pos,
-  lines,
-  accent,
-}: {
-  pos: [number, number, number];
-  lines: string[];
-  accent: string;
-}) {
-  const tex = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 512;
-    c.height = 1024;
-    const ctx = c.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = "#101a21";
-      ctx.fillRect(0, 0, 512, 1024);
-      ctx.fillStyle = accent;
-      ctx.fillRect(0, 0, 512, 14);
-      ctx.fillRect(0, 1010, 512, 14);
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "bold 92px monospace";
-      lines.forEach((l, i) => {
-        ctx.fillStyle = i === lines.length - 1 ? accent : "#e5e7eb";
-        ctx.fillText(l, 256, 260 + i * 160);
-      });
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, [lines, accent]);
-  return (
-    <group position={pos}>
-      <mesh position={[0, -1.1, 0]} raycast={() => null}>
-        <planeGeometry args={[1.1, 2.2]} />
-        <meshBasicMaterial map={tex} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh raycast={() => null}>
-        <boxGeometry args={[1.2, 0.05, 0.05]} />
-        <meshStandardMaterial color="#444" metalness={0.6} />
-      </mesh>
-    </group>
-  );
-}
-
 // ---- wooden crates (CS room, de_dust energy) ----
 function Crate({ pos, size = 0.8, rotY = 0 }: { pos: [number, number, number]; size?: number; rotY?: number }) {
   return (
@@ -179,13 +132,11 @@ function Crate({ pos, size = 0.8, rotY = 0 }: { pos: [number, number, number]; s
 export function Decor() {
   return (
     <group>
-      {/* entry hall: columns flanking the corridor mouth + banners */}
+      {/* entry hall columns */}
       <Column pos={[-4, 0, -3.3]} />
       <Column pos={[4, 0, -3.3]} />
       <Column pos={[-9, 0, -0.5]} />
       <Column pos={[9, 0, -0.5]} />
-      <Banner pos={[-6.5, 3.9, -2]} lines={["DEAD", "TECH", "2026"]} accent="#fc7900" />
-      <Banner pos={[6.5, 3.9, -2]} lines={["BORN", "TO", "BUILD"]} accent="#0278ff" />
 
       {/* corridor: ceiling light strip + baseboard glow */}
       {[-6, -10, -14, -18, -22].map((z) => (
