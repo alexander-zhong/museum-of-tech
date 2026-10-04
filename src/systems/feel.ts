@@ -6,6 +6,7 @@ export const feel = {
   // fed by PlayerController each frame; read by the third-person avatar
   avatarMoving: false,
   avatarSpeed: 0,
+  gunRecoil: 0, // third-person held-gun kick, fed by CsRange
 };
 
 // set by PlayerController; lets UI buttons re-enter pointer lock and

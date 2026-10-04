@@ -8,6 +8,7 @@ export type NetState = {
   yaw: number;
   char: string;
   mv: boolean; // moving (drives walk anim)
+  w?: string; // equipped weapon id (third-person held model)
   hp: number; // 0 = down, waiting to respawn
   // The shot that put us down: [dirX, dirZ, force, seed]. Observers learn
   // about a death from this packet, not from the hit — only the victim ever

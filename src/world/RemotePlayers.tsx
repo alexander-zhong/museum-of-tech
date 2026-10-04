@@ -39,6 +39,7 @@ function RemoteOtter({ id }: { id: string }) {
   const moving = useRef(false);
   const speed = useRef(0);
   const [char, setChar] = useState("gold");
+  const [heldWeapon, setHeldWeapon] = useState<string>("rifle");
   const last = useRef(new THREE.Vector3());
   // ragdoll bookkeeping: a body stays where it fell, not where they respawn
   const deathAt = useRef(0);
@@ -107,6 +108,8 @@ function RemoteOtter({ id }: { id: string }) {
       }
     }
     if (s.char !== char) setChar(s.char);
+    const w = s.w ?? "rifle";
+    if (w !== heldWeapon) setHeldWeapon(w);
 
     // the dead stop catching bullets — and raycasting ignores `visible`,
     // so park the hitboxes on an unused layer rather than just hiding them

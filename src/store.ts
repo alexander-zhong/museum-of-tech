@@ -72,7 +72,7 @@ export const useStore = create<MuseumState>()((set) => ({
   subtitle: null,
   mode: "walk",
   view: "first",
-  weapon: "pistol",
+  weapon: "rifle",
   character: "gold",
   sol: 10,
   ownedSkins: [],

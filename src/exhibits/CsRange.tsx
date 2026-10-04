@@ -396,12 +396,15 @@ export function CsRange() {
       if (!s.locked || !equipped.current) return;
       if (e.code === "KeyB") {
         s.set({ buyMenu: !s.buyMenu });
-      } else if (s.buyMenu && /^Digit[1-5]$/.test(e.code)) {
+      } else if (/^Digit[1-5]$/.test(e.code)) {
+        // CS-style direct weapon hotkeys: 1 rifle, 2 pistol, 3 knife, 4 smg, 5 awp
         const idx = Number(e.code.slice(5)) - 1;
-        if (WEAPONS[idx]) {
+        if (WEAPONS[idx] && WEAPONS[idx].id !== s.weapon) {
           s.set({ weapon: WEAPONS[idx].id, buyMenu: false });
           feel.fovZoom = 0;
           sfxDing();
+        } else if (s.buyMenu) {
+          s.set({ buyMenu: false });
         }
       }
     };
@@ -423,12 +426,15 @@ export function CsRange() {
     if (firing.current && weaponById(useStore.getState().weapon).auto) {
       tryFireRef.current();
     }
+    // recoil decays regardless of which camera is active
+    recoil.current = Math.max(0, recoil.current - dt * 8);
+    feel.gunRecoil = recoil.current;
     // viewmodel follows the camera
     if (gun.current) {
       const st = useStore.getState();
       gun.current.visible = equipped.current && st.locked && st.view === "first";
       if (gun.current.visible) {
-        recoil.current = Math.max(0, recoil.current - dt * 8);
+
         const sway = Math.sin(state.clock.elapsedTime * 1.7) * 0.004;
         gun.current.position.copy(camera.position);
         gun.current.quaternion.copy(camera.quaternion);
