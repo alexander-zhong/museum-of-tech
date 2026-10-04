@@ -45,7 +45,6 @@ export function PlayerController() {
   const jumpY = useRef(0); // height above the floor
   const lastLand = useRef(0);
   const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
-  const netTimer = useRef(0);
   const smoothY = useRef(EYE);
   const avatar = useRef<THREE.Group>(null);
 
@@ -76,9 +75,31 @@ export function PlayerController() {
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+
+    // multiplayer broadcast on a timer, NOT the render loop and NOT gated on
+    // pointer lock — so a paused or unfocused window stays present in the
+    // world instead of freezing out, like a real online game.
+    const dir = new THREE.Vector3();
+    const net = setInterval(() => {
+      camera.getWorldDirection(dir);
+      const s = useStore.getState();
+      try {
+        sendState({
+          p: [head.current.x, head.current.y, head.current.z],
+          yaw: Math.atan2(dir.x, dir.z),
+          char: s.character,
+          mv: feel.avatarMoving,
+          hp: s.dead ? 0 : s.hp,
+        });
+      } catch {
+        /* no peers yet */
+      }
+    }, 90);
+
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      clearInterval(net);
     };
   }, [camera]);
 
@@ -175,6 +196,7 @@ export function PlayerController() {
       feel.avatarMoving = moving;
       feel.avatarSpeed = hSpeed;
 
+
       // idle nag
       if (now - lastMove.current > 20000) {
         say("idle");
@@ -188,26 +210,7 @@ export function PlayerController() {
       feel.avatarSpeed = 0;
     }
 
-    // multiplayer: broadcast ~12x/s, including while down so peers see us drop
-    if (state.locked) {
-      netTimer.current += d;
-      if (netTimer.current > 0.085) {
-        netTimer.current = 0;
-        const fwdDir = new THREE.Vector3();
-        camera.getWorldDirection(fwdDir);
-        try {
-          sendState({
-            p: [head.current.x, head.current.y, head.current.z],
-            yaw: Math.atan2(fwdDir.x, fwdDir.z),
-            char: state.character,
-            mv: feel.avatarMoving,
-            hp: state.dead ? 0 : state.hp,
-          });
-        } catch {
-          /* no peers yet */
-        }
-      }
-    }
+    if (!state.locked) feel.avatarMoving = false; // paused = standing, not moonwalking
 
     // respawn timer + kill-feed expiry
     combatTick();

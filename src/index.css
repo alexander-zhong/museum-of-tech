@@ -267,6 +267,7 @@ canvas {
 }
 
 .buy-menu {
+  pointer-events: auto;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -289,6 +290,7 @@ canvas {
 }
 
 .buy-row {
+  cursor: pointer;
   display: grid;
   grid-template-columns: 28px 120px 1fr auto;
   gap: 10px;
@@ -297,6 +299,10 @@ canvas {
   border-radius: 4px;
   font-size: 14px;
   color: var(--light);
+}
+
+.buy-row:hover {
+  background: rgba(252, 121, 0, 0.1);
 }
 
 .buy-row.owned {

@@ -34,7 +34,7 @@ export function Hud() {
 
   return (
     <div className="hud">
-      {!locked && started && (
+      {!locked && started && !buyMenu && (
         <div className="pause-menu">
           <div className="pause-box">
             <p className="pause-q">Back to the menu?</p>
@@ -168,11 +168,15 @@ export function Hud() {
           )}
           {buyMenu && (
             <div className="buy-menu">
-              <div className="buy-title">BUY MENU</div>
+              <div className="buy-title">BUY MENU · press 1–5 or click</div>
               {WEAPONS.map((w, i) => (
                 <div
                   key={w.id}
                   className={`buy-row${w.id === weapon ? " owned" : ""}`}
+                  onClick={() => {
+                    set({ weapon: w.id, buyMenu: false });
+                    session.lock();
+                  }}
                 >
                   <span className="buy-key">{i + 1}</span>
                   <span className="buy-name">{w.name}</span>
@@ -180,7 +184,7 @@ export function Hud() {
                   <span className="buy-price">${w.price.toLocaleString()}</span>
                 </div>
               ))}
-              <div className="buy-footer">FUNDS: $16,000 · they respawn, don't worry</div>
+              <div className="buy-footer">FUNDS: $16,000 · B to close</div>
             </div>
           )}
         </>

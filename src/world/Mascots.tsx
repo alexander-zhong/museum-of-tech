@@ -42,8 +42,8 @@ useGLTF.preload("/models/sparky_walk.glb");
 export const CHARACTERS = [
   { id: "gold", name: "SPARKY", hue: 0, swatch: "#e0a33c" },
   { id: "blue", name: "SURGE", hue: 170, swatch: "#2f7dd1" },
-  { id: "purple", name: "VOLT", hue: 230, swatch: "#8e5bd4" },
-  { id: "green", name: "OHM", hue: 90, swatch: "#52b86a" },
+  { id: "purple", name: "TRENDY", hue: 285, swatch: "#f472b6" },
+  { id: "green", name: "SENDY", hue: 90, swatch: "#52b86a" },
 ];
 
 const tintCache = new Map<string, THREE.Texture>();
@@ -150,6 +150,17 @@ export function OtterRig({
       </group>
     </group>
   );
+}
+
+// Range target: a static otter clone that CAN catch the crosshair ray
+// (unlike avatars, which are raycast-invisible). Valorant-bot energy.
+export function TargetOtter({ hue }: { hue: number }) {
+  const idle = useGLTF("/models/sparky_idle.glb");
+  const scene = useMemo(() => SkeletonUtils.clone(idle.scene), [idle.scene]);
+  useEffect(() => {
+    applyHue(scene, hue);
+  }, [scene, hue]);
+  return <primitive object={scene} />;
 }
 
 export function hueFor(characterId: string): number {
