@@ -39,7 +39,7 @@ export const useStore = create<MuseumState>((set) => ({
   weapon: "pistol",
   character: "gold",
   buyMenu: false,
-  armed: false,
+  armed: true, // everyone spawns carrying
   hitAt: 0,
   set: (p) => set(p),
 }));

@@ -30,8 +30,7 @@ export const LINES: Record<string, string> = {
     "Cracked. Took the pros years. Took you one button. Don't let it go to your head.",
   idle: "You good? The exhibits are right there.",
   "entry-cs":
-    "Counter-Strike. Built by Minh Le, an SFU student, between assignments. The GOAT walked these halls. Grab the gun.",
-  "cs-gun": "There it is. Point, click, make SFU proud. And don't rush B.",
+    "Counter-Strike. Built by Minh Le, an SFU student, between assignments. The GOAT walked these halls. Range is hot.",
   "cs-clear": "All targets down. Minh Le would nod slightly. That's huge.",
   sparky:
     "That's Sparky. He's not an exhibit. He just lives here now. Do not feed him.",
