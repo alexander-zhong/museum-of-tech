@@ -1,9 +1,9 @@
 import { useStore } from "../store";
-import { session } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
 import { CHARACTERS } from "../world/Mascots";
 import { initWallet } from "../systems/wallet";
+import { session } from "../systems/feel";
 import { useEffect } from "react";
 import { BhopMusic } from "./BhopMusic";
 import { DeathJingle } from "./DeathJingle";
@@ -21,6 +21,7 @@ export function Hud() {
     roomTitle,
     hitAt,
     buyMenu,
+    econMenu,
     weapon,
     armed,
     character,
@@ -47,7 +48,7 @@ export function Hud() {
 
   return (
     <div className="hud">
-      {!locked && started && !buyMenu && !lesson && (
+      {!locked && started && !buyMenu && !econMenu && !lesson && (
         <div className="pause-menu">
           <div className="pause-box">
             <p className="pause-q">Back to the menu?</p>
@@ -111,7 +112,7 @@ export function Hud() {
             </div>
             <p className="start-cta">CLICK TO ENTER</p>
             <p className="start-controls">
-              WASD move · SPACE jump (hold it to bhop) · SHIFT sprint · E interact · V camera · ESC release
+              WASD move · SPACE jump (hold it to bhop) · SHIFT sprint · E interact · V camera · M market · ESC release
             </p>
           </div>
         </div>
@@ -205,6 +206,25 @@ export function Hud() {
         </>
       )}
 
+      {started && econMenu && (
+        <div className="econ-overlay">
+          <div className="econ-panel">
+            <div className="econ-head">
+              <span>OTTER MARKET</span>
+              <button
+                className="econ-small"
+                onClick={() => {
+                  set({ econMenu: false });
+                  session.lock();
+                }}
+              >
+                CLOSE (M)
+              </button>
+            </div>
+            <SkinEconomy />
+          </div>
+        </div>
+      )}
       {walletMsg && Date.now() - walletMsgAt < 4000 && (
         <div key={walletMsgAt} className="wallet-toast">{walletMsg}</div>
       )}

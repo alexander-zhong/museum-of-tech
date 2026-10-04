@@ -272,7 +272,7 @@ export function CsRange() {
 
     const tryFire = () => {
       const s = useStore.getState();
-      if (!s.locked || s.mode !== "walk" || !equipped.current || s.buyMenu) return;
+      if (!s.locked || s.mode !== "walk" || !equipped.current || s.buyMenu || s.econMenu) return;
       if (s.dead) return; // no shooting from the respawn queue
       const def = weaponById(s.weapon);
       const now = performance.now();

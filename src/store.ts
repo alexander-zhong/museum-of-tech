@@ -42,6 +42,7 @@ interface MuseumState {
   walletMsgAt: number;
   walletMode: "demo" | "devnet";
   buyMenu: boolean;
+  econMenu: boolean; // in-game marketplace/inventory overlay (M)
   armed: boolean; // picked up the replica in the CS room
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
   botKillAt: number; // last range-bot takedown (drives the jingle)
@@ -81,6 +82,7 @@ export const useStore = create<MuseumState>()((set) => ({
   walletMsgAt: 0,
   walletMode: "demo",
   buyMenu: false,
+  econMenu: false,
   armed: true, // everyone spawns carrying
   hitAt: 0,
   botKillAt: 0,
