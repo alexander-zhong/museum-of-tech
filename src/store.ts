@@ -27,7 +27,7 @@ interface MuseumState {
   set: (p: Partial<MuseumState>) => void;
 }
 
-export const useStore = create<MuseumState>((set) => ({
+export const useStore = create<MuseumState>()((set) => ({
   locked: false,
   started: false,
   room: null,
@@ -43,3 +43,8 @@ export const useStore = create<MuseumState>((set) => ({
   hitAt: 0,
   set: (p) => set(p),
 }));
+
+// dev console access for debugging
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__store = useStore;
+}
