@@ -10,6 +10,7 @@ import { dispatchInteract, promptFor } from "../systems/interact";
 import { sfxFootstep, startAmbient } from "../systems/sfx";
 import { feel } from "../systems/feel";
 import { weaponById } from "../systems/weapons";
+import { sendState } from "../systems/net";
 
 const SPEED = 4;
 const SPRINT = 6.2;
@@ -43,6 +44,7 @@ export function PlayerController() {
   const jumpY = useRef(0); // height above the floor
   const lastLand = useRef(0);
   const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
+  const netTimer = useRef(0);
   const smoothY = useRef(EYE);
   const avatar = useRef<THREE.Group>(null);
 
@@ -162,6 +164,24 @@ export function PlayerController() {
       if (moving) lastMove.current = now;
       feel.avatarMoving = moving;
       feel.avatarSpeed = hSpeed;
+
+      // multiplayer: broadcast position ~12x/s
+      netTimer.current += d;
+      if (netTimer.current > 0.085) {
+        netTimer.current = 0;
+        const fwdDir = new THREE.Vector3();
+        camera.getWorldDirection(fwdDir);
+        try {
+          sendState({
+            p: [head.current.x, head.current.y, head.current.z],
+            yaw: Math.atan2(fwdDir.x, fwdDir.z),
+            char: state.character,
+            mv: moving,
+          });
+        } catch {
+          /* no peers yet */
+        }
+      }
 
       // idle nag
       if (now - lastMove.current > 20000) {

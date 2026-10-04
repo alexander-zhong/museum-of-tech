@@ -94,12 +94,19 @@ function applyHue(root: THREE.Object3D, hue: number) {
   });
 }
 
-// The player's third-person body: your chosen otter, idle or walking.
-export function SparkyAvatar() {
+// Reusable otter rig: cloned skeleton, idle/walk blend, hue tint.
+// Drives the local third-person avatar AND remote multiplayer players.
+export function OtterRig({
+  hue,
+  getMoving,
+  getSpeed,
+}: {
+  hue: number;
+  getMoving: () => boolean;
+  getSpeed: () => number;
+}) {
   const idle = useGLTF("/models/sparky_idle.glb");
   const walk = useGLTF("/models/sparky_walk.glb");
-  const character = useStore((s) => s.character);
-  // clone so the entry-hall greeter and the player can coexist
   const idleScene = useMemo(() => SkeletonUtils.clone(idle.scene), [idle.scene]);
   const walkScene = useMemo(() => SkeletonUtils.clone(walk.scene), [walk.scene]);
   useMemo(() => {
@@ -121,17 +128,16 @@ export function SparkyAvatar() {
   }, [idleAnim.actions, walkAnim.actions]);
 
   useEffect(() => {
-    const hue = CHARACTERS.find((ch) => ch.id === character)?.hue ?? 0;
     applyHue(idleScene, hue);
     applyHue(walkScene, hue);
-  }, [character, idleScene, walkScene]);
+  }, [hue, idleScene, walkScene]);
 
   useFrame(() => {
-    const moving = feel.avatarMoving;
+    const moving = getMoving();
     if (idleRef.current) idleRef.current.visible = !moving;
     if (walkRef.current) walkRef.current.visible = moving;
     const act = Object.values(walkAnim.actions)[0];
-    if (act) act.timeScale = Math.min(2.4, Math.max(0.8, feel.avatarSpeed / 3.2));
+    if (act) act.timeScale = Math.min(2.4, Math.max(0.8, getSpeed() / 3.2));
   });
 
   return (
@@ -143,6 +149,22 @@ export function SparkyAvatar() {
         <primitive object={walkScene} />
       </group>
     </group>
+  );
+}
+
+export function hueFor(characterId: string): number {
+  return CHARACTERS.find((ch) => ch.id === characterId)?.hue ?? 0;
+}
+
+// The player's third-person body: your chosen otter.
+export function SparkyAvatar() {
+  const character = useStore((s) => s.character);
+  return (
+    <OtterRig
+      hue={hueFor(character)}
+      getMoving={() => feel.avatarMoving}
+      getSpeed={() => feel.avatarSpeed}
+    />
   );
 }
 
