@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { feel } from "../systems/feel";
+import { LINES, stopNarration } from "../systems/narration";
 
 // Demo tour (P): a ~2 minute guided walkthrough of every exhibit with its
 // own ElevenLabs voiceover (public/audio/demo-N.mp3, one per shot). While
@@ -39,6 +40,25 @@ const TOUR: TourShot[] = [
   { kind: "dolly", from: [0, 2.0, 1.2], to: [0, 1.7, -2.6], look: [0, 1.4, -12], dur: 10 },
 ];
 
+const CAPTIONS: (string | null)[] = [
+  "This is Otter Origins — our StormHacks 2026 submission. A multiplayer museum where the history of computing is something you play — not something you read.",
+  "Built in 24 hours with React Three Fiber. Four rooms tell the story of your computer — transistor, chip, compiler, network — with an ElevenLabs tour guide narrating every step.",
+  null, // learn-eniac caption resolved from LINES
+  null,
+  null,
+  null,
+  "And the story lands in 1999 — Counter-Strike, built right here at SFU by student Minh Le. So we built him a range: six otter bots, five weapons, a thirty-second drill.",
+  "This portal leads somewhere less educational.",
+  "Full multiplayer deathmatch. No servers, no logins — pure peer-to-peer. Headshots, kill feeds, ragdolls, and a skin marketplace running on Solana.",
+  "Otter Origins. Twenty-four hours, one museum, zero naps. History you can bunny-hop through. Thanks for watching.",
+];
+
+function captionFor(i: number): string | null {
+  const shot = TOUR[i];
+  if (shot?.lesson) return LINES[`learn-${shot.lesson}`] ?? null;
+  return CAPTIONS[i] ?? null;
+}
+
 const ease = (t: number) => t * t * (3 - 2 * t);
 
 export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
@@ -64,7 +84,9 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
         stopAudio();
         feel.cinemaPov = false;
         started.current = false;
-        if (useStore.getState().lesson) useStore.getState().set({ lesson: null });
+        const sx = useStore.getState();
+        sx.set({ subtitle: null });
+        if (sx.lesson) sx.set({ lesson: null });
       }
       return;
     }
@@ -72,6 +94,7 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
       started.current = true;
       t.current = 0;
       idx.current = -1;
+      stopNarration(); // nothing talks over the demo, no matter who was mid-sentence
     }
     feel.cinemaPov = false;
 
@@ -104,6 +127,7 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
       if ((shot.lesson ?? null) !== s2.lesson) {
         s2.set({ lesson: (shot.lesson ?? null) as never });
       }
+      s2.set({ subtitle: captionFor(idx.current) });
     }
 
     const shot = TOUR[idx.current];

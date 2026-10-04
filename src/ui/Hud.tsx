@@ -47,7 +47,16 @@ export function Hud() {
     initWallet();
   }, []);
 
-  if (cinema) return null; // clean frames for the montage
+  if (cinema) {
+    // movie mode: subtitles only, everything else stays hidden
+    return subtitle ? (
+      <div className="hud">
+        <div className="subtitle">
+          <span className="subtitle-speaker">OTTER ORIGINS</span> {subtitle}
+        </div>
+      </div>
+    ) : null;
+  }
 
   return (
     <div className="hud">
