@@ -638,3 +638,37 @@ canvas {
   .museum-map-heading { font-size: 10px; }
   .museum-map-heading span, .museum-map-legend { font-size: 8px; }
 }
+
+/* shown instead of a blank page when the 3D scene throws */
+.crash-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--navy);
+  text-align: center;
+  padding: 24px;
+}
+
+.crash-title {
+  color: var(--orange);
+  letter-spacing: 0.22em;
+  font-size: 20px;
+}
+
+.crash-msg {
+  color: var(--light);
+  font-size: 13px;
+  max-width: 680px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.crash-hint {
+  color: var(--gray);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
