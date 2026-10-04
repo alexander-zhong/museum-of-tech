@@ -72,6 +72,10 @@ export function PlayerController() {
     // direction; YXZ matches how PointerLockControls builds the orientation,
     // so rotation.z means roll and nothing else.
     camera.rotation.order = "YXZ";
+    // R3F aims the default camera at the world origin unless the Canvas camera
+    // props carry a rotation, which from eye height is a faceful of floor.
+    // Level it: zero yaw looks down -Z, straight along the corridor.
+    camera.rotation.set(0, 0, 0);
 
     const down = (e: KeyboardEvent) => {
       if (useStore.getState().lesson) return;
