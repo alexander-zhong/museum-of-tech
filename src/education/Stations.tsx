@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { lessons, type LessonId } from "./content";
 import { ROOMS } from "../world/layout";
 import { registerInteract } from "../systems/interact";
+import { say } from "../systems/narration";
 import { useStore } from "../store";
 
 function Station({ id }: { id: LessonId }) {
@@ -30,6 +31,7 @@ function Station({ id }: { id: LessonId }) {
   useEffect(() => registerInteract(`lesson-${id}`, `E — Explore ${lesson.name}`, () => {
     if (!useStore.getState().locked || useStore.getState().lesson) return;
     useStore.getState().set({ lesson: id, buyMenu: false, subtitle: null });
+    say(`learn-${id}`, true);
     document.exitPointerLock();
   }), [id, lesson.name]);
   return <group position={[west ? room.minX + 0.7 : room.maxX - 0.7, 0, (room.minZ + room.maxZ) / 2]} rotation={[0, west ? Math.PI / 2 : -Math.PI / 2, 0]}>

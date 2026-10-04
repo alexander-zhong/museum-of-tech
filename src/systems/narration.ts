@@ -86,6 +86,7 @@ export function narrateRoom(room: string | null) {
 }
 
 export function say(id: string, repeat = false) {
+  if (useStore.getState().cinema) return; // movie mode: demo voiceover only
   const text = LINES[id];
   if (!text) return;
   if (!repeat && played.has(id) && !REPEATABLE.has(id)) return;
