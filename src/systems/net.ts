@@ -48,10 +48,15 @@ export const shotQueue: NetShot[] = [];
 
 // Filled in by systems/combat.ts; kept as a handler bag so net.ts stays
 // a dumb transport and we avoid an import cycle.
+export type NetTrade = {
+  skin: string;
+};
+
 export const netHandlers: {
   onHit: ((from: string, hit: NetHit) => void) | null;
   onFrag: ((victim: string, frag: NetFrag) => void) | null;
-} = { onHit: null, onFrag: null };
+  onTrade: ((from: string, trade: NetTrade) => void) | null;
+} = { onHit: null, onFrag: null, onTrade: null };
 
 const stateAction = room.makeAction<NetState>("state", {
   onMessage: (s, ctx) => {
@@ -69,6 +74,9 @@ const hitAction = room.makeAction<NetHit>("hit", {
 const fragAction = room.makeAction<NetFrag>("frag", {
   onMessage: (f, ctx) => netHandlers.onFrag?.(ctx.peerId, f),
 });
+const tradeAction = room.makeAction<NetTrade>("trade", {
+  onMessage: (t, ctx) => netHandlers.onTrade?.(ctx.peerId, t),
+});
 
 // All sends are fire-and-forget: a peer can drop mid-flight and we would
 // rather lose the packet than surface an unhandled rejection mid-firefight.
@@ -78,6 +86,8 @@ export const sendShot = (s: NetShot) => shotAction.send(s).catch(nop);
 export const sendHit = (target: string, h: NetHit) =>
   hitAction.send(h, { target }).catch(nop);
 export const sendFrag = (f: NetFrag) => fragAction.send(f).catch(nop);
+export const sendTrade = (target: string, t: NetTrade) =>
+  tradeAction.send(t, { target }).catch(nop);
 
 room.onPeerLeave = (id) => {
   peers.delete(id);
