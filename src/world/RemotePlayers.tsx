@@ -9,7 +9,7 @@ import {
   ragdollPose,
   type Knock,
 } from "../systems/ragdoll";
-import { OtterRig, hueFor, CHARACTERS } from "./Mascots";
+import { OtterRig, lookFor, nameFor, CHARACTERS, SKINS } from "./Mascots";
 
 const STALE_MS = 6000; // drop peers that stop talking
 const EYE = 1.6;
@@ -128,7 +128,7 @@ function RemoteOtter({ id }: { id: string }) {
         <group position={[0, -HIP_PIVOT, 0]}>
           <Suspense fallback={null}>
             <OtterRig
-              hue={hueFor(char)}
+              look={lookFor(char)}
               getMoving={() => moving.current}
               getSpeed={() => speed.current}
             />
@@ -175,7 +175,7 @@ function RemoteOtter({ id }: { id: string }) {
 }
 
 function NameTag({ char }: { char: string }) {
-  const def = CHARACTERS.find((c) => c.id === char);
+  const def = CHARACTERS.find((c) => c.id === char) ?? SKINS.find((k) => k.id === char);
   const tex = useMemo(() => {
     const c = document.createElement("canvas");
     c.width = 256;
@@ -187,7 +187,7 @@ function NameTag({ char }: { char: string }) {
       ctx.fillStyle = def?.swatch ?? "#e0a33c";
       ctx.font = "bold 28px monospace";
       ctx.textAlign = "center";
-      ctx.fillText(def?.name ?? "OTTER", 128, 42);
+      ctx.fillText(nameFor(char), 128, 42);
     }
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;

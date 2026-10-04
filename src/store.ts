@@ -33,6 +33,11 @@ interface MuseumState {
   view: "first" | "third";
   weapon: string;
   character: string;
+  // demo-Solana skin economy
+  sol: number;
+  ownedSkins: string[];
+  walletMsg: string | null;
+  walletMsgAt: number;
   buyMenu: boolean;
   armed: boolean; // picked up the replica in the CS room
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
@@ -65,6 +70,10 @@ export const useStore = create<MuseumState>()((set) => ({
   view: "first",
   weapon: "pistol",
   character: "gold",
+  sol: 10,
+  ownedSkins: [],
+  walletMsg: null,
+  walletMsgAt: 0,
   buyMenu: false,
   armed: true, // everyone spawns carrying
   hitAt: 0,
