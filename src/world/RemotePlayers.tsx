@@ -5,8 +5,9 @@ import { peers, shotQueue, type NetState } from "../systems/net";
 import { MAX_HP } from "../systems/combat";
 import {
   HIP_PIVOT,
+  fallbackKnock,
   ragdollPose,
-  ragdollSeed,
+  type Knock,
 } from "../systems/ragdoll";
 import { OtterRig, hueFor, CHARACTERS } from "./Mascots";
 
@@ -44,7 +45,7 @@ function RemoteOtter({ id }: { id: string }) {
   const deathPos = useRef(new THREE.Vector3());
   const deathYaw = useRef(0);
   const snapUntil = useRef(0); // just-respawned: teleport, never glide
-  const seed = useMemo(() => ragdollSeed(id), [id]);
+  const knock = useRef<Knock>(fallbackKnock(0));
 
   useFrame((_, dt) => {
     const entry = peers.get(id);
@@ -61,6 +62,10 @@ function RemoteOtter({ id }: { id: string }) {
       deathAt.current = now;
       deathPos.current.copy(g.position);
       deathYaw.current = g.rotation.y;
+      // the shot rides along with hp hitting zero; older clients send none
+      knock.current = s.ko
+        ? { dx: s.ko[0], dz: s.ko[1], force: s.ko[2], seed: s.ko[3] }
+        : fallbackKnock(deathYaw.current);
     } else if (alive && deathAt.current !== 0) {
       // respawned somewhere else — snap, don't glide across the museum
       deathAt.current = 0;
@@ -85,7 +90,7 @@ function RemoteOtter({ id }: { id: string }) {
       last.current.copy(g.position);
       moving.current = s.mv || speed.current > 0.5;
     } else {
-      const pose = ragdollPose(now - deathAt.current, seed);
+      const pose = ragdollPose(now - deathAt.current, knock.current, deathYaw.current);
       g.position.set(
         deathPos.current.x + pose.dx,
         deathPos.current.y + pose.y,

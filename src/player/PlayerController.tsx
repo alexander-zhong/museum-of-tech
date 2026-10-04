@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { SparkyAvatar } from "../world/Mascots";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
@@ -12,8 +12,13 @@ import { feel, session } from "../systems/feel";
 import { weaponById } from "../systems/weapons";
 import { sendState } from "../systems/net";
 import { combatTick } from "../systems/combat";
-import { FALL_MS, HIP_PIVOT, ragdollPose, ragdollSeed } from "../systems/ragdoll";
-import { myId } from "../systems/net";
+import {
+  FALL_MS,
+  HIP_PIVOT,
+  fallbackKnock,
+  ragdollPose,
+  type Knock,
+} from "../systems/ragdoll";
 
 const SPEED = 4;
 const SPRINT = 6.2;
@@ -57,7 +62,7 @@ export function PlayerController() {
   const deadYaw = useRef(0); // the way you were facing when you dropped
   const roll = useRef(0); // death-cam roll, owned here — never read off the camera
   const thudded = useRef(false);
-  const mySeed = useMemo(() => ragdollSeed(myId), []);
+  const knock = useRef<Knock>(fallbackKnock(0));
 
   useEffect(() => {
     camera.position.set(0, EYE, 0.5);
@@ -109,6 +114,7 @@ export function PlayerController() {
           char: s.character,
           mv: feel.avatarMoving,
           hp: s.dead ? 0 : s.hp,
+          ...(s.dead && s.knock ? { ko: s.knock } : {}),
         });
       } catch {
         /* no peers yet */
@@ -234,6 +240,10 @@ export function PlayerController() {
         camera.getWorldDirection(look);
         deadYaw.current = Math.atan2(look.x, look.z);
         thudded.current = false;
+        const k = state.knock;
+        knock.current = k
+          ? { dx: k[0], dz: k[1], force: k[2], seed: k[3] }
+          : fallbackKnock(deadYaw.current);
       }
       if (!thudded.current && performance.now() - deadSince.current > FALL_MS) {
         thudded.current = true;
@@ -282,7 +292,11 @@ export function PlayerController() {
     // avatar visible only in third person, facing camera yaw
     if (avatar.current) {
       const pose = state.dead
-        ? ragdollPose(performance.now() - deadSince.current, mySeed)
+        ? ragdollPose(
+            performance.now() - deadSince.current,
+            knock.current,
+            deadYaw.current,
+          )
         : null;
       avatar.current.visible = third && state.locked && !pose?.gone;
       if (avatar.current.visible) {

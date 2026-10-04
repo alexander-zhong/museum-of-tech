@@ -10,7 +10,7 @@ import {
   sendHit,
   type NetHit,
 } from "./net";
-import { weaponById } from "./weapons";
+import { weaponById, type WeaponDef } from "./weapons";
 import { sfxDeath, sfxHeadshot, sfxHit, sfxHurt, sfxKill } from "./sfx";
 import { session } from "./feel";
 import { pointBlocked } from "../world/layout";
@@ -58,6 +58,11 @@ function pushFeed(line: Omit<FeedLine, "n" | "at">) {
   s.set({ feed: [...s.feed, entry].slice(-FEED_MAX) });
 }
 
+/** How hard a weapon shoves a body over, from its recoil. */
+export function knockForce(def: WeaponDef): number {
+  return Math.min(1.4, 0.25 + def.kick * 0.3);
+}
+
 // Distance falloff: pistols and SMGs get polite across the museum,
 // the sniper and the knife do not negotiate.
 function falloff(dist: number, sniper?: boolean, knife?: boolean): number {
@@ -76,6 +81,8 @@ export function damagePlayer(
   weaponId: string,
   headshot: boolean,
   dist: number,
+  dirX: number,
+  dirZ: number,
 ) {
   const victim = peers.get(peerId);
   if (!victim || victim.state.hp <= 0) return;
@@ -91,7 +98,7 @@ export function damagePlayer(
     ),
   );
 
-  sendHit(peerId, { d: dmg, w: def.id, hs: headshot });
+  sendHit(peerId, { d: dmg, w: def.id, hs: headshot, dx: dirX, dz: dirZ });
 
   // No local prediction of their health: their next state packet (~85ms)
   // is the only thing that moves their bar. Predicting it meant a lethal
@@ -111,6 +118,14 @@ function die(killer: string, hit: NetHit) {
     respawnIn: Math.ceil(RESPAWN_MS / 1000),
     buyMenu: false,
     deathBy: peerLabel(killer),
+    // the flop is built from the shot, and the seed is shared so that every
+    // screen tumbles this body the same way
+    knock: [
+      hit.dx ?? 0,
+      hit.dz ?? 0,
+      knockForce(weaponById(hit.w)),
+      Math.random(),
+    ],
   });
   sfxDeath();
   pushFeed({
@@ -136,7 +151,9 @@ function pickSpawn(): [number, number] {
 function respawn() {
   const [x, z] = pickSpawn();
   session.teleport(x, z);
-  useStore.getState().set({ hp: MAX_HP, dead: false, respawnIn: 0, deathBy: null });
+  useStore
+    .getState()
+    .set({ hp: MAX_HP, dead: false, respawnIn: 0, deathBy: null, knock: null });
 }
 
 /** Full reset — used when leaving to the main menu. */
@@ -151,6 +168,7 @@ export function resetCombat() {
     feed: [],
     killName: null,
     deathBy: null,
+    knock: null,
     killAt: 0,
     hurtAt: 0,
   });
