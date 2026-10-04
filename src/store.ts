@@ -83,7 +83,7 @@ export const useStore = create<MuseumState>()((set) => ({
   walletMode: "demo",
   buyMenu: false,
   econMenu: false,
-  armed: true, // everyone spawns carrying
+  armed: false, // unarmed until you pick the AK off the range bench
   hitAt: 0,
   botKillAt: 0,
   hp: 100,

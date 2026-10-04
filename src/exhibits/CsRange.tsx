@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
+import { registerInteract } from "../systems/interact";
 import { sfxShoot, sfxHit, sfxDing } from "../systems/sfx";
 import { addFovKick, feel } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
@@ -25,6 +26,22 @@ const FLASH_Z: Record<string, number> = {
 const RIFLE_SCALE = 0.002; // ~0.62 m long
 const RIFLE_OFFSET: [number, number, number] = [0, -0.108, 0.273];
 
+// The same rifle again, as the pickup lying on the shooting bench. In model
+// space it spans X -19..292 (butt to muzzle) and Y -44..82 (magazine floor to
+// sight), so at RIFLE_SCALE the length midpoint is 0.273 m along +X and the
+// magazine sits 0.088 m below the origin. Up stays +Y, so it rests on its
+// magazine the way a rifle does on a flat bench.
+const RIFLE_MID = 0.273; // origin -> length midpoint
+const RIFLE_DROP = 0.088; // origin -> magazine floor
+const BENCH_TOP = 0.9; // bench box is 0.9 tall, centred at 0.45
+const BENCH_YAW = 0.35; // laid along the bench, slightly askew
+// Undo the midpoint offset through the yaw so the rifle centres on the bench.
+const BENCH_RIFLE_OFFSET: [number, number, number] = [
+  -RIFLE_MID * Math.cos(BENCH_YAW),
+  BENCH_TOP + RIFLE_DROP,
+  RIFLE_MID * Math.sin(BENCH_YAW),
+];
+
 // The pack paints 91% of this gun in three shades of grey a few percent
 // apart, so it reads as one blob however it is lit. These pull the parts
 // apart on BOTH axes that survive flat ambient light: brightness (near-black
@@ -41,13 +58,16 @@ const RIFLE_PALETTE: Record<string, string> = {
   Black: "#15171a",
 };
 
-function RifleModel() {
+// Clone + repaint, shared by the viewmodel and the bench pickup. `inert`
+// strips raycasting for the viewmodel, which rides on the camera and must
+// never catch our own bullets; the bench rifle keeps its raycast so shots
+// spark off it, and so the crosshair can find its interactId.
+function useRifleClone(inert: boolean) {
   const { scene } = useGLTF("/models/AssaultRifle_1.glb");
-  const model = useMemo(() => {
+  return useMemo(() => {
     const clone = scene.clone(true);
     clone.traverse((o) => {
-      // a viewmodel rides on the camera — it must never catch our own bullets
-      o.raycast = () => {};
+      if (inert) o.raycast = () => {};
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       // clone() shares materials with the cached glTF, so copy before tinting
@@ -61,7 +81,11 @@ function RifleModel() {
       mesh.material = Array.isArray(mesh.material) ? tinted : tinted[0];
     });
     return clone;
-  }, [scene]);
+  }, [scene, inert]);
+}
+
+function RifleModel() {
+  const model = useRifleClone(true);
   return (
     <group
       position={RIFLE_OFFSET}
@@ -73,7 +97,22 @@ function RifleModel() {
   );
 }
 
+function BenchRifle() {
+  const model = useRifleClone(false);
+  return (
+    <group
+      position={BENCH_RIFLE_OFFSET}
+      rotation={[0, BENCH_YAW, 0]}
+      scale={RIFLE_SCALE}
+    >
+      <primitive object={model} />
+    </group>
+  );
+}
+
 useGLTF.preload("/models/AssaultRifle_1.glb");
+
+const RIFLE_PICKUP = "cs-rifle-pickup";
 
 const MAX_SPARKS = 90;
 const MAX_HOLES = 24;
@@ -87,7 +126,6 @@ const DRILL_MS = 30000;
 export function CsRange() {
   const { camera, scene } = useThree();
   const weaponId = useStore((s) => s.weapon); // re-render viewmodel on switch
-  const equipped = useRef(true); // armed from spawn
   const firing = useRef(false);
   const lastFire = useRef(0);
   const tryFireRef = useRef<() => void>(() => {});
@@ -95,7 +133,6 @@ export function CsRange() {
   const flash = useRef<THREE.Mesh>(null);
   const flashUntil = useRef(0);
   const recoil = useRef(0);
-  const tableGun = useRef<THREE.Group>(null);
 
   const targets = useRef<(THREE.Group | null)[]>([]);
   const alive = useRef<boolean[]>(Array(TARGETS).fill(true));
@@ -272,7 +309,7 @@ export function CsRange() {
 
     const tryFire = () => {
       const s = useStore.getState();
-      if (!s.locked || s.mode !== "walk" || !equipped.current || s.buyMenu || s.econMenu) return;
+      if (!s.locked || s.mode !== "walk" || !s.armed || s.buyMenu || s.econMenu) return;
       if (s.dead) return; // no shooting from the respawn queue
       const def = weaponById(s.weapon);
       const now = performance.now();
@@ -379,7 +416,7 @@ export function CsRange() {
         tryFire();
       } else if (e.button === 2) {
         const s = useStore.getState();
-        if (s.locked && equipped.current && weaponById(s.weapon).sniper) {
+        if (s.locked && s.armed && weaponById(s.weapon).sniper) {
           feel.fovZoom = -34; // scoped
         }
       }
@@ -393,7 +430,7 @@ export function CsRange() {
     };
     const onKey = (e: KeyboardEvent) => {
       const s = useStore.getState();
-      if (!s.locked || !equipped.current) return;
+      if (!s.locked || !s.armed) return;
       if (e.code === "KeyB") {
         s.set({ buyMenu: !s.buyMenu });
       } else if (/^Digit[1-5]$/.test(e.code)) {
@@ -408,11 +445,31 @@ export function CsRange() {
         }
       }
     };
+    // Arming is private to this browser: `armed` is local store state and is
+    // never broadcast, and the bench rifle is never consumed or hidden. So the
+    // pickup stays available to every player independently — one visitor taking
+    // a rifle cannot use it up for anyone else. Taking it twice is a no-op.
+    const offPickup = registerInteract(
+      RIFLE_PICKUP,
+      () =>
+        useStore.getState().armed
+          ? "AK-1977 replica · already carrying"
+          : "Pick up the AK-1977",
+      () => {
+        const s = useStore.getState();
+        if (s.armed) return;
+        s.set({ armed: true, weapon: "rifle" });
+        sfxDing();
+        say("cs-pickup");
+      },
+    );
+
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("contextmenu", onContext);
     window.addEventListener("keydown", onKey);
     return () => {
+      offPickup();
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("contextmenu", onContext);
@@ -432,7 +489,7 @@ export function CsRange() {
     // viewmodel follows the camera
     if (gun.current) {
       const st = useStore.getState();
-      gun.current.visible = equipped.current && st.locked && st.view === "first";
+      gun.current.visible = st.armed && st.locked && st.view === "first";
       if (gun.current.visible) {
 
         const sway = Math.sin(state.clock.elapsedTime * 1.7) * 0.004;
@@ -519,16 +576,13 @@ export function CsRange() {
           <boxGeometry args={[1.6, 0.9, 0.6]} />
           <meshStandardMaterial color="#26262e" roughness={0.7} />
         </mesh>
-        {/* pickup gun on the bench */}
-        <group ref={tableGun} position={[0, 0.98, 0]} rotation={[0, 0.9, Math.PI / 2]}>
-          <mesh>
-            <boxGeometry args={[0.45, 0.09, 0.08]} />
-            <meshStandardMaterial color="#3a3a42" metalness={0.6} roughness={0.35} />
-          </mesh>
-          <mesh position={[-0.12, -0.09, 0]}>
-            <boxGeometry args={[0.08, 0.14, 0.07]} />
-            <meshStandardMaterial color="#2c2c33" roughness={0.5} />
-          </mesh>
+        {/* The AK on the bench: the rifle you pick up to arm yourself. It is a
+            permanent fixture, not a one-off spawn — it never leaves the bench,
+            so every visitor (and you again after a respawn) can take one. */}
+        <group userData={{ interactId: RIFLE_PICKUP }}>
+          <Suspense fallback={null}>
+            <BenchRifle />
+          </Suspense>
         </group>
       </group>
 

@@ -39,7 +39,7 @@ function RemoteOtter({ id }: { id: string }) {
   const moving = useRef(false);
   const speed = useRef(0);
   const [char, setChar] = useState("gold");
-  const [heldWeapon, setHeldWeapon] = useState<string>("rifle");
+  const [heldWeapon, setHeldWeapon] = useState<string | null>(null);
   const last = useRef(new THREE.Vector3());
   // ragdoll bookkeeping: a body stays where it fell, not where they respawn
   const deathAt = useRef(0);
@@ -108,7 +108,9 @@ function RemoteOtter({ id }: { id: string }) {
       }
     }
     if (s.char !== char) setChar(s.char);
-    const w = s.w ?? "rifle";
+    // NetState.w is omitted while a peer is unarmed, so undefined means empty
+    // paws — not a default rifle. Anything else is the weapon they picked up.
+    const w = s.w ?? null;
     if (w !== heldWeapon) setHeldWeapon(w);
 
     // the dead stop catching bullets — and raycasting ignores `visible`,
@@ -132,6 +134,7 @@ function RemoteOtter({ id }: { id: string }) {
           <Suspense fallback={null}>
             <OtterRig
               look={lookFor(char)}
+              weaponId={heldWeapon}
               getMoving={() => moving.current}
               getSpeed={() => speed.current}
             />

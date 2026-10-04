@@ -350,10 +350,11 @@ export function hueFor(characterId: string): number {
 export function SparkyAvatar() {
   const character = useStore((s) => s.character);
   const weapon = useStore((s) => s.weapon);
+  const armed = useStore((s) => s.armed);
   return (
     <OtterRig
       look={lookFor(character)}
-      weaponId={weapon}
+      weaponId={armed ? weapon : null}
       getRecoil={() => feel.gunRecoil}
       getMoving={() => feel.avatarMoving}
       getSpeed={() => feel.avatarSpeed}
