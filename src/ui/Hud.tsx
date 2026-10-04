@@ -1,7 +1,7 @@
 import { useStore } from "../store";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
-import { CHARACTERS } from "../world/Mascots";
+import { CHARACTERS, nameFor, swatchFor } from "../world/Mascots";
 import { initWallet } from "../systems/wallet";
 import { session } from "../systems/feel";
 import { useEffect } from "react";
@@ -176,6 +176,14 @@ export function Hud() {
           )}
           {prompt && <div className="prompt">{prompt}</div>}
           {roomTitle && <div className="room-title">{roomTitle}</div>}
+          <div className="skin-chip">
+            <span
+              className="skin-chip-swatch"
+              style={{ background: swatchFor(character) }}
+            />
+            {nameFor(character)}
+            <span className="skin-chip-hint"> · V to view · M market</span>
+          </div>
           {armed && (
             <div className="weapon-label">
               {weaponById(weapon).name}

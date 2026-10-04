@@ -101,6 +101,14 @@ export function rollSkin(): (typeof SKINS)[number] {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+export function swatchFor(id: string): string {
+  return (
+    CHARACTERS.find((c) => c.id === id)?.swatch ??
+    SKINS.find((k) => k.id === id)?.swatch ??
+    "#e0a33c"
+  );
+}
+
 export function nameFor(id: string): string {
   return (
     CHARACTERS.find((c) => c.id === id)?.name ??

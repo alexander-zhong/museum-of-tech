@@ -539,6 +539,32 @@ canvas {
   to { opacity: 1; }
 }
 
+/* equipped skin chip */
+.skin-chip {
+  position: absolute;
+  left: 28px;
+  bottom: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--light);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+.skin-chip-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.skin-chip-hint {
+  color: var(--gray);
+  font-size: 10px;
+}
+
 /* weapon label + CS buy menu */
 .weapon-label {
   position: absolute;
