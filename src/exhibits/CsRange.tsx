@@ -221,6 +221,10 @@ export function CsRange() {
       if (now - lastFire.current < def.fireMs) return;
       lastFire.current = now;
 
+      if (import.meta.env.DEV) {
+        const w = window as unknown as Record<string, unknown>;
+        w.__lastShot = { t: Date.now(), weapon: def.id };
+      }
       sfxShoot(def.id);
       recoil.current = def.recoil;
       addFovKick(def.kick);

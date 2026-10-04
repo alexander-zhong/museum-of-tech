@@ -15,6 +15,11 @@ export const session = {
   teleport: (_x: number, _z: number) => {},
 };
 
+// dev console access for debugging
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__session = session;
+}
+
 export function addFovKick(amount: number) {
   feel.fovKick = Math.min(6, feel.fovKick + amount);
 }
