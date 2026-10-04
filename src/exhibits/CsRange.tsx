@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useGLTF } from "@react-three/drei";
 import { TargetOtter, CHARACTERS } from "../world/Mascots";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -13,9 +14,39 @@ import { damagePlayer } from "../systems/combat";
 const FLASH_Z: Record<string, number> = {
   pistol: -0.2,
   smg: -0.26,
-  rifle: -0.3,
+  rifle: -0.33, // the model's muzzle sits a little further out than the old box
   awp: -0.42,
 };
+
+// Converted from AssaultRifle_1.fbx (npx tsx scripts/fbx-to-glb.ts).
+// The model is 310 units long, muzzle at +X, up at +Y, origin near the stock,
+// so it gets a quarter turn to point down -Z, a scale into metres, and a
+// shift that puts the barrel axis on the group origin where the flash is.
+const RIFLE_SCALE = 0.002; // ~0.62 m long
+const RIFLE_OFFSET: [number, number, number] = [0, -0.108, 0.273];
+
+function RifleModel() {
+  const { scene } = useGLTF("/models/AssaultRifle_1.glb");
+  const model = useMemo(() => {
+    const clone = scene.clone(true);
+    // a viewmodel rides on the camera — it must never catch our own bullets
+    clone.traverse((o) => {
+      o.raycast = () => {};
+    });
+    return clone;
+  }, [scene]);
+  return (
+    <group
+      position={RIFLE_OFFSET}
+      rotation={[0, Math.PI / 2, 0]}
+      scale={RIFLE_SCALE}
+    >
+      <primitive object={model} />
+    </group>
+  );
+}
+
+useGLTF.preload("/models/AssaultRifle_1.glb");
 
 const MAX_SPARKS = 90;
 const MAX_HOLES = 24;
@@ -586,20 +617,9 @@ export function CsRange() {
           </>
         )}
         {weaponId === "rifle" && (
-          <>
-            <mesh raycast={() => null}>
-              <boxGeometry args={[0.07, 0.09, 0.42]} />
-              <meshStandardMaterial color="#4a3426" metalness={0.3} roughness={0.5} />
-            </mesh>
-            <mesh position={[0, -0.12, 0.06]} rotation={[-0.35, 0, 0]} raycast={() => null}>
-              <boxGeometry args={[0.05, 0.16, 0.07]} />
-              <meshStandardMaterial color="#3a3a42" metalness={0.5} roughness={0.4} />
-            </mesh>
-            <mesh position={[0, -0.02, 0.28]} rotation={[0.2, 0, 0]} raycast={() => null}>
-              <boxGeometry args={[0.06, 0.1, 0.14]} />
-              <meshStandardMaterial color="#4a3426" roughness={0.5} />
-            </mesh>
-          </>
+          <Suspense fallback={null}>
+            <RifleModel />
+          </Suspense>
         )}
         {weaponId === "awp" && (
           <>
