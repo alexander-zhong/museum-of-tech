@@ -30,8 +30,9 @@ const RIFLE_OFFSET: [number, number, number] = [0, -0.108, 0.273];
 // apart on BOTH axes that survive flat ambient light: brightness (near-black
 // receiver against bright steel) and temperature (warm wood against cool
 // metal). Delete this map for the asset's raw colours.
-// DarkMetal is 45% of the surface, so it carries the body and sits mid-tone;
-// Black (24%) drops to grip/detail dark; Metal (21%) is the bright highlight.
+// DarkMetal is 59% of the surface, so it carries the body and sits mid-tone;
+// Black (10%) is grip/detail dark, Metal (20%) the bright highlight at the
+// muzzle, DarkWood (11%) the handguard.
 const RIFLE_PALETTE: Record<string, string> = {
   Wood: "#b06e30",
   DarkWood: "#92521f",
