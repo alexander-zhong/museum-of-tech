@@ -2,59 +2,69 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
 
 const VIDEO_ID = "yusP6sDpI20";
-const PLAY_MS = 6000; // plays once per event, then the iframe unmounts
+const PLAY_MS = 6000; // each instance plays once, then unmounts
+const MAX_STACK = 10; // mercy cap on simultaneous instances
 
-// On every elimination the jingle plays once for BOTH parties:
-// the victim (on death) and the attacker (on kill).
+// Every elimination spawns its OWN player instance, so rapid kills
+// stack and overlap instead of restarting one clip.
 export function DeathJingle() {
   const { dead, killAt, botKillAt } = useStore();
-  const [playKey, setPlayKey] = useState(0);
+  const [plays, setPlays] = useState<number[]>([]);
   const wasDead = useRef(false);
   const lastKill = useRef(0);
+  const lastBot = useRef(0);
+  const seq = useRef(0);
+
+  const spawn = () => {
+    seq.current += 1;
+    const id = seq.current;
+    setPlays((p) => [...p, id].slice(-MAX_STACK));
+    setTimeout(() => {
+      setPlays((p) => p.filter((n) => n !== id));
+    }, PLAY_MS);
+  };
 
   // victim: fire on the moment of death
   useEffect(() => {
-    if (dead && !wasDead.current) setPlayKey(Date.now());
+    if (dead && !wasDead.current) spawn();
     wasDead.current = dead;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dead]);
 
   // attacker: fire on each new elimination
   useEffect(() => {
     if (killAt > 0 && killAt !== lastKill.current) {
       lastKill.current = killAt;
-      setPlayKey(Date.now());
+      spawn();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [killAt]);
 
   // range bots count too
-  const lastBot = useRef(0);
   useEffect(() => {
     if (botKillAt > 0 && botKillAt !== lastBot.current) {
       lastBot.current = botKillAt;
-      setPlayKey(Date.now());
+      spawn();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [botKillAt]);
 
-  // unmount after one play-through
-  useEffect(() => {
-    if (!playKey) return;
-    const t = setTimeout(() => setPlayKey(0), PLAY_MS);
-    return () => clearTimeout(t);
-  }, [playKey]);
-
-  if (!playKey) return null;
   return (
-    <iframe
-      key={playKey}
-      className="bhop-music-audio"
-      title="Elimination jingle"
-      src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&playsinline=1&rel=0`}
-      width="200"
-      height="200"
-      allow="autoplay; encrypted-media"
-      referrerPolicy="strict-origin-when-cross-origin"
-      tabIndex={-1}
-      aria-hidden="true"
-    />
+    <>
+      {plays.map((id) => (
+        <iframe
+          key={id}
+          className="bhop-music-audio"
+          title="Elimination jingle"
+          src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&playsinline=1&rel=0`}
+          width="200"
+          height="200"
+          allow="autoplay; encrypted-media"
+          referrerPolicy="strict-origin-when-cross-origin"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      ))}
+    </>
   );
 }
