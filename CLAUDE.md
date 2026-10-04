@@ -11,6 +11,7 @@ Vite + React + TypeScript, React Three Fiber + drei, Zustand. No backend; static
 - `npm run dev` — dev server
 - `npm run build` — tsc + vite build (keep this green)
 - `ELEVENLABS_API_KEY=... npx tsx scripts/generate-narration.ts` — pre-bake narrator MP3s to public/audio/ (optional; subtitles work without)
+- `npx tsx scripts/fbx-to-glb.ts [file.fbx]` — convert weapon/prop FBX to .glb. Sources go in `assets/models-src/` (not deployed), output lands in `public/models/`. Reports bbox and materials; FBX is usually in centimetres, so expect to scale at the mount point.
 
 ## Architecture
 - `src/world/layout.ts` — floor plan, wall AABBs, collision, room bounds. All geometry derives from WALLS/ROOMS here.
