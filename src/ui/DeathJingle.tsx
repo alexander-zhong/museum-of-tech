@@ -7,7 +7,7 @@ const PLAY_MS = 6000; // plays once per event, then the iframe unmounts
 // On every elimination the jingle plays once for BOTH parties:
 // the victim (on death) and the attacker (on kill).
 export function DeathJingle() {
-  const { dead, killAt } = useStore();
+  const { dead, killAt, botKillAt } = useStore();
   const [playKey, setPlayKey] = useState(0);
   const wasDead = useRef(false);
   const lastKill = useRef(0);
@@ -25,6 +25,15 @@ export function DeathJingle() {
       setPlayKey(Date.now());
     }
   }, [killAt]);
+
+  // range bots count too
+  const lastBot = useRef(0);
+  useEffect(() => {
+    if (botKillAt > 0 && botKillAt !== lastBot.current) {
+      lastBot.current = botKillAt;
+      setPlayKey(Date.now());
+    }
+  }, [botKillAt]);
 
   // unmount after one play-through
   useEffect(() => {

@@ -354,7 +354,7 @@ export function CsRange() {
           bots.current[i].deadAt = now;
           sfxHit();
           spawnSparks(hit.point, normal, def.sparks + 4);
-          s.set({ hitAt: now });
+          s.set({ hitAt: now, botKillAt: now });
           // drill: first kill starts the 30s clock
           if (drillEnd.current === null && now - drillOverAt.current > 5000) {
             drillEnd.current = now + DRILL_MS;
