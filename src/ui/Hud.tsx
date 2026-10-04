@@ -4,6 +4,7 @@ import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
 import { CHARACTERS } from "../world/Mascots";
 import { BhopMusic } from "./BhopMusic";
+import { DeathJingle } from "./DeathJingle";
 import { MuseumMap } from "./MuseumMap";
 
 export function Hud() {
@@ -194,6 +195,7 @@ export function Hud() {
       )}
 
       <BhopMusic />
+      <DeathJingle />
 
       {subtitle && (
         <div className="subtitle">
