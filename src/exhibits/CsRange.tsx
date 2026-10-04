@@ -432,7 +432,7 @@ export function CsRange() {
     // viewmodel follows the camera
     if (gun.current) {
       const st = useStore.getState();
-      gun.current.visible = equipped.current && st.locked && st.view === "first";
+      gun.current.visible = equipped.current && st.locked && st.view === "first" && !st.cinema;
       if (gun.current.visible) {
 
         const sway = Math.sin(state.clock.elapsedTime * 1.7) * 0.004;

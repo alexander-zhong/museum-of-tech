@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from "react";
 import { SparkyAvatar } from "../world/Mascots";
+import { Cinematic } from "../world/Cinematic";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -81,6 +82,12 @@ export function PlayerController() {
       if (e.code === "KeyV") {
         const s = useStore.getState();
         s.set({ view: s.view === "first" ? "third" : "first" });
+      }
+      if (e.code === "F9") {
+        const s = useStore.getState();
+        s.set({ cinema: !s.cinema });
+        if (!s.cinema) document.exitPointerLock();
+        return;
       }
       if (e.code === "KeyM") {
         const s = useStore.getState();
@@ -283,6 +290,13 @@ export function PlayerController() {
     combatTick();
 
     // camera placement: first person = at the head; third = boom behind, wall-clamped
+    if (state.cinema) {
+      if (avatar.current) {
+        avatar.current.visible = true;
+        avatar.current.position.set(head.current.x, head.current.y - EYE, head.current.z);
+      }
+      return; // the Cinematic component owns the camera
+    }
     const third = state.view === "third";
     if (third) {
       const fwdDir = new THREE.Vector3();
@@ -428,6 +442,7 @@ export function PlayerController() {
           useStore.getState().set({ locked: false, mode: "walk", prompt: null })
         }
       />
+      <Cinematic head={head} />
       {/* third-person avatar: you are Sparky */}
       <group ref={avatar} visible={false}>
         <group ref={avatarFlop} position={[0, HIP_PIVOT, 0]}>
