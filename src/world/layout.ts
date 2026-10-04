@@ -149,7 +149,7 @@ interface RoomDef {
 }
 
 export const ROOMS: RoomDef[] = [
-  { id: "entry", title: "MUSEUM OF DEAD TECH", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
+  { id: "entry", title: "OTTER ORIGINS", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
   { id: "eniac", title: "01 · TRANSISTOR · 1947", minX: -13, maxX: -3, minZ: -15, maxZ: -4 },
   { id: "bombe", title: "02 · INTEGRATED CIRCUIT · 1958–1971", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
   { id: "pong", title: "03 · COMPILER · 1952 ONWARD", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },

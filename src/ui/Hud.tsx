@@ -76,11 +76,10 @@ export function Hud() {
       {!locked && !started && (
         <div className="start-screen">
           <div className="start-inner">
-            <p className="start-kicker">STORMHACKS 2026 PRESENTS</p>
             <h1 className="start-title">
-              MUSEUM OF
+              OTTER
               <br />
-              <span className="accent">DEAD TECH</span>
+              <span className="accent">ORIGINS</span>
             </h1>
             <p className="start-tag">
               Recreate the breakthroughs that built your computer.
@@ -108,7 +107,15 @@ export function Hud() {
                 ))}
               </div>
               <p className="char-note">press V in-game to see yourself</p>
-              <SkinEconomy />
+              <button
+                className="pause-btn main-shop-btn"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  set({ econMenu: true });
+                }}
+              >
+                SHOP
+              </button>
             </div>
             <p className="start-cta">CLICK TO ENTER</p>
             <p className="start-controls">
@@ -214,7 +221,7 @@ export function Hud() {
         </>
       )}
 
-      {started && econMenu && (
+      {econMenu && (
         <div className="econ-overlay" onClick={(e) => e.stopPropagation()}>
           <div className="econ-panel">
             <div className="econ-head">
@@ -223,10 +230,10 @@ export function Hud() {
                 className="econ-small"
                 onClick={() => {
                   set({ econMenu: false });
-                  session.lock();
+                  if (started) session.lock();
                 }}
               >
-                CLOSE (M)
+                CLOSE
               </button>
             </div>
             <SkinEconomy />

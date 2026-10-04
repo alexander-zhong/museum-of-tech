@@ -50,13 +50,6 @@ canvas {
   padding: 24px;
 }
 
-.start-kicker {
-  color: var(--blue);
-  letter-spacing: 0.35em;
-  font-size: 13px;
-  margin-bottom: 20px;
-}
-
 .start-title {
   font-size: clamp(44px, 8vw, 84px);
   line-height: 1.02;
@@ -986,4 +979,9 @@ canvas {
   color: var(--gray);
   font-size: 11px;
   letter-spacing: 0.14em;
+}
+
+.main-shop-btn {
+  margin-top: 18px;
+  pointer-events: auto;
 }
