@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { TargetOtter, CHARACTERS } from "../world/Mascots";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
-import { registerInteract } from "../systems/interact";
 import { sfxShoot, sfxHit, sfxDing } from "../systems/sfx";
 import { addFovKick, feel } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
@@ -22,12 +22,13 @@ const MAX_HOLES = 24;
 
 const TARGETS = 6;
 const TARGET_X = [-3.75, -2.25, -0.75, 0.75, 2.25, 3.75];
+const TARGET_HUES = CHARACTERS.map((c) => c.hue);
 const RESET_MS = 3500;
 
 export function CsRange() {
   const { camera, scene } = useThree();
   const weaponId = useStore((s) => s.weapon); // re-render viewmodel on switch
-  const equipped = useRef(false);
+  const equipped = useRef(true); // armed from spawn
   const firing = useRef(false);
   const lastFire = useRef(0);
   const tryFireRef = useRef<() => void>(() => {});
@@ -131,12 +132,7 @@ export function CsRange() {
     ctx.font = "bold 44px monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#fc7900";
-    if (!equipped.current) {
-      ctx.fillText("GRAB THE REPLICA", 320, 70);
-      ctx.font = "26px monospace";
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillText("ON THE BENCH BEHIND YOU", 320, 115);
-    } else if (clearedAt.current !== null && runStart.current !== null) {
+    if (clearedAt.current !== null && runStart.current !== null) {
       const secs = ((clearedAt.current - runStart.current) / 1000).toFixed(2);
       ctx.fillText(`CLEAR  ${secs}s`, 320, 70);
       ctx.font = "26px monospace";
@@ -208,14 +204,6 @@ export function CsRange() {
 
   useEffect(() => {
     drawBoard();
-    const unregister = registerInteract("cs-gun", "E — grab the gun", () => {
-      if (equipped.current) return;
-      equipped.current = true;
-      useStore.getState().set({ armed: true });
-      if (tableGun.current) tableGun.current.visible = false;
-      say("cs-gun");
-      drawBoard();
-    });
 
     const tryFire = () => {
       const s = useStore.getState();
@@ -353,7 +341,6 @@ export function CsRange() {
     window.addEventListener("contextmenu", onContext);
     window.addEventListener("keydown", onKey);
     return () => {
-      unregister();
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("contextmenu", onContext);
@@ -411,11 +398,11 @@ export function CsRange() {
       }
       if (any) sparkGeo.attributes.position.needsUpdate = true;
     }
-    // targets flip down when dead, pop back up on reset
+    // dead bots faceplant toward the shooter, pop back up on reset
     targets.current.forEach((g, i) => {
       if (!g) return;
-      const want = alive.current[i] ? 0 : -Math.PI / 2;
-      g.rotation.x += (want - g.rotation.x) * Math.min(1, dt * 10);
+      const want = alive.current[i] ? 0 : Math.PI / 2;
+      g.rotation.x += (want - g.rotation.x) * Math.min(1, dt * 9);
     });
   });
 
@@ -429,7 +416,7 @@ export function CsRange() {
           <meshStandardMaterial color="#26262e" roughness={0.7} />
         </mesh>
         {/* pickup gun on the bench */}
-        <group ref={tableGun} position={[0, 0.98, 0]} rotation={[0, 0.9, Math.PI / 2]} userData={{ interactId: "cs-gun" }}>
+        <group ref={tableGun} position={[0, 0.98, 0]} rotation={[0, 0.9, Math.PI / 2]}>
           <mesh>
             <boxGeometry args={[0.45, 0.09, 0.08]} />
             <meshStandardMaterial color="#3a3a42" metalness={0.6} roughness={0.35} />
@@ -447,36 +434,30 @@ export function CsRange() {
         <meshBasicMaterial color="#fc7900" />
       </mesh>
 
-      {/* targets along the back wall */}
+      {/* targets: otter range bots along the back wall, Valorant style */}
       {TARGET_X.map((x, i) => (
-        <group key={i} position={[x, 0, -37.4]}>
-          {/* post */}
-          <mesh position={[0, 0.6, 0]}>
-            <boxGeometry args={[0.08, 1.2, 0.08]} />
-            <meshStandardMaterial color="#3a3a42" />
+        <group
+          key={i}
+          position={[x, 0, -37.3]}
+          ref={(g) => {
+            targets.current[i] = g;
+          }}
+          userData={{ targetIndex: i }}
+        >
+          {/* pad they stand on */}
+          <mesh position={[0, 0.02, 0]} raycast={() => null}>
+            <cylinderGeometry args={[0.45, 0.5, 0.05, 16]} />
+            <meshStandardMaterial
+              color="#1a222c"
+              emissive="#fc7900"
+              emissiveIntensity={0.25}
+            />
           </mesh>
-          {/* flipping head (pivot at top of post) */}
-          <group
-            position={[0, 1.2, 0]}
-            ref={(g) => {
-              targets.current[i] = g;
-            }}
-            userData={{ targetIndex: i }}
-          >
-            <mesh position={[0, 0.32, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.3, 0.3, 0.05, 20]} />
-              <meshStandardMaterial
-                color="#fc7900"
-                emissive="#fc7900"
-                emissiveIntensity={0.5}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
-            <mesh position={[0, 0.32, 0.03]}>
-              <ringGeometry args={[0.1, 0.16, 20]} />
-              <meshBasicMaterial color="#101a21" side={THREE.DoubleSide} />
-            </mesh>
-          </group>
+          <Suspense fallback={null}>
+            <group scale={0.62}>
+              <TargetOtter hue={TARGET_HUES[i % TARGET_HUES.length]} />
+            </group>
+          </Suspense>
         </group>
       ))}
 

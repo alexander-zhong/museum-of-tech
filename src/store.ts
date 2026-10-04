@@ -47,7 +47,7 @@ interface MuseumState {
   set: (p: Partial<MuseumState>) => void;
 }
 
-export const useStore = create<MuseumState>((set) => ({
+export const useStore = create<MuseumState>()((set) => ({
   locked: false,
   started: false,
   room: null,
@@ -59,7 +59,7 @@ export const useStore = create<MuseumState>((set) => ({
   weapon: "pistol",
   character: "gold",
   buyMenu: false,
-  armed: false,
+  armed: true, // everyone spawns carrying
   hitAt: 0,
   hp: 100,
   dead: false,
@@ -73,3 +73,8 @@ export const useStore = create<MuseumState>((set) => ({
   feed: [],
   set: (p) => set(p),
 }));
+
+// dev console access for debugging
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__store = useStore;
+}

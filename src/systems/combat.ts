@@ -168,8 +168,10 @@ export function combatTick() {
 
 netHandlers.onHit = (from, hit) => {
   const s = useStore.getState();
-  // not in the world (menu / pause / Pong) means not shootable
-  if (!s.locked || s.dead || s.hp <= 0) return;
+  // presence is broadcast even while paused or unfocused, so a paused player
+  // is still standing in the world — and still shootable. Only the main menu
+  // (never entered / left the game) is out of play.
+  if (!s.started || s.dead || s.hp <= 0) return;
   const hp = Math.max(0, s.hp - Math.max(0, Math.min(500, hit.d)));
   if (hp > 0) {
     s.set({ hp, hurtAt: performance.now() });
