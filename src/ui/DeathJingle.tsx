@@ -4,6 +4,7 @@ import { useStore } from "../store";
 const VIDEO_ID = "yusP6sDpI20";
 const PLAY_MS = 6000; // each voice plays this long, then pauses
 const POOL = 3; // pre-mounted players; kills round-robin across them
+const TARGET_JINGLE_CHANCE = 0.05;
 
 function command(frame: HTMLIFrameElement | null, func: string, args: unknown[] = []) {
   frame?.contentWindow?.postMessage(
@@ -54,11 +55,11 @@ export function DeathJingle() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [killAt]);
 
-  // range bots count too
+  // Range targets have a 5% chance; player eliminations always trigger above.
   useEffect(() => {
     if (botKillAt > 0 && botKillAt !== lastBot.current) {
       lastBot.current = botKillAt;
-      spawn();
+      if (Math.random() < TARGET_JINGLE_CHANCE) spawn();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [botKillAt]);
