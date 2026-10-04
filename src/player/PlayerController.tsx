@@ -44,7 +44,6 @@ export function PlayerController() {
   const jumpY = useRef(0); // height above the floor
   const lastLand = useRef(0);
   const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
-  const netTimer = useRef(0);
   const smoothY = useRef(EYE);
   const avatar = useRef<THREE.Group>(null);
 
@@ -66,9 +65,29 @@ export function PlayerController() {
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+
+    // multiplayer broadcast on a timer, NOT the render loop and NOT gated on
+    // pointer lock — so a paused or unfocused window stays present in the
+    // world instead of freezing out, like a real online game.
+    const dir = new THREE.Vector3();
+    const net = setInterval(() => {
+      camera.getWorldDirection(dir);
+      try {
+        sendState({
+          p: [head.current.x, head.current.y, head.current.z],
+          yaw: Math.atan2(dir.x, dir.z),
+          char: useStore.getState().character,
+          mv: feel.avatarMoving,
+        });
+      } catch {
+        /* no peers yet */
+      }
+    }, 90);
+
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      clearInterval(net);
     };
   }, [camera]);
 
@@ -165,23 +184,6 @@ export function PlayerController() {
       feel.avatarMoving = moving;
       feel.avatarSpeed = hSpeed;
 
-      // multiplayer: broadcast position ~12x/s
-      netTimer.current += d;
-      if (netTimer.current > 0.085) {
-        netTimer.current = 0;
-        const fwdDir = new THREE.Vector3();
-        camera.getWorldDirection(fwdDir);
-        try {
-          sendState({
-            p: [head.current.x, head.current.y, head.current.z],
-            yaw: Math.atan2(fwdDir.x, fwdDir.z),
-            char: state.character,
-            mv: moving,
-          });
-        } catch {
-          /* no peers yet */
-        }
-      }
 
       // idle nag
       if (now - lastMove.current > 20000) {
@@ -189,6 +191,8 @@ export function PlayerController() {
         lastMove.current = now;
       }
     }
+
+    if (!state.locked) feel.avatarMoving = false; // paused = standing, not moonwalking
 
     // camera placement: first person = at the head; third = boom behind, wall-clamped
     const third = state.view === "third";
