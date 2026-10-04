@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { SparkyAvatar } from "../world/Mascots";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
@@ -7,11 +7,13 @@ import { collide, pointBlocked, roomAt, roomTitle } from "../world/layout";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
-import { sfxFootstep, startAmbient } from "../systems/sfx";
+import { sfxFootstep, sfxThud, startAmbient } from "../systems/sfx";
 import { feel, session } from "../systems/feel";
 import { weaponById } from "../systems/weapons";
 import { sendState } from "../systems/net";
 import { combatTick } from "../systems/combat";
+import { FALL_MS, HIP_PIVOT, ragdollPose, ragdollSeed } from "../systems/ragdoll";
+import { myId } from "../systems/net";
 
 const SPEED = 4;
 const SPRINT = 6.2;
@@ -29,6 +31,8 @@ const MAX_AIR_SPEED = 11; // hard cap on horizontal speed
 const BHOP_WINDOW = 160; // ms after landing where a jump keeps momentum
 const BHOP_BOOST = 1.09; // speed multiplier per chained hop
 const BOOM = 3.1; // third-person camera distance
+const DEAD_EYE = 0.42; // where the camera ends up once you hit the floor
+const DEAD_ROLL = 0.95; // and how far it rolls over
 
 export function PlayerController() {
   const { camera, scene } = useThree();
@@ -47,6 +51,11 @@ export function PlayerController() {
   const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
   const smoothY = useRef(EYE);
   const avatar = useRef<THREE.Group>(null);
+  const avatarFlop = useRef<THREE.Group>(null);
+  const deadSince = useRef(0); // drives the death cam and your own ragdoll
+  const deadYaw = useRef(0); // the way you were facing when you dropped
+  const thudded = useRef(false);
+  const mySeed = useMemo(() => ragdollSeed(myId), []);
 
   useEffect(() => {
     camera.position.set(0, EYE, 0.5);
@@ -213,6 +222,29 @@ export function PlayerController() {
       vy.current = 0;
       feel.avatarMoving = false;
       feel.avatarSpeed = 0;
+      if (deadSince.current === 0) {
+        deadSince.current = performance.now();
+        const look = new THREE.Vector3();
+        camera.getWorldDirection(look);
+        deadYaw.current = Math.atan2(look.x, look.z);
+        thudded.current = false;
+      }
+      if (!thudded.current && performance.now() - deadSince.current > FALL_MS) {
+        thudded.current = true;
+        sfxThud(); // the body settling
+      }
+      // ...and the camera drops to the floor with them
+      smoothY.current += (DEAD_EYE - smoothY.current) * Math.min(1, d * 6);
+      head.current.y = smoothY.current;
+      camera.rotation.z += (DEAD_ROLL - camera.rotation.z) * Math.min(1, d * 5);
+    }
+    if (!state.dead) {
+      deadSince.current = 0;
+      // unroll on respawn
+      if (camera.rotation.z !== 0) {
+        camera.rotation.z *= 1 - Math.min(1, d * 8);
+        if (Math.abs(camera.rotation.z) < 0.001) camera.rotation.z = 0;
+      }
     }
 
     if (!state.locked) feel.avatarMoving = false; // paused = standing, not moonwalking
@@ -242,16 +274,34 @@ export function PlayerController() {
 
     // avatar visible only in third person, facing camera yaw
     if (avatar.current) {
-      avatar.current.visible = third && state.locked;
+      const pose = state.dead
+        ? ragdollPose(performance.now() - deadSince.current, mySeed)
+        : null;
+      avatar.current.visible = third && state.locked && !pose?.gone;
       if (avatar.current.visible) {
-        avatar.current.position.set(
-          head.current.x,
-          head.current.y - EYE,
-          head.current.z,
-        );
         const fwdDir = new THREE.Vector3();
         camera.getWorldDirection(fwdDir);
-        avatar.current.rotation.y = Math.atan2(fwdDir.x, fwdDir.z);
+        if (pose) {
+          // the camera is on the floor, so place the body on the floor too
+          avatar.current.position.set(
+            head.current.x + pose.dx,
+            pose.y,
+            head.current.z + pose.dz,
+          );
+          avatar.current.rotation.y = deadYaw.current + pose.spin;
+          if (avatarFlop.current) {
+            avatarFlop.current.rotation.x = pose.pitch;
+            avatarFlop.current.rotation.z = pose.roll;
+          }
+        } else {
+          avatar.current.position.set(
+            head.current.x,
+            head.current.y - EYE,
+            head.current.z,
+          );
+          avatar.current.rotation.y = Math.atan2(fwdDir.x, fwdDir.z);
+          if (avatarFlop.current) avatarFlop.current.rotation.set(0, 0, 0);
+        }
       }
     }
 
@@ -327,9 +377,13 @@ export function PlayerController() {
       />
       {/* third-person avatar: you are Sparky */}
       <group ref={avatar} visible={false}>
-        <Suspense fallback={null}>
-          <SparkyAvatar />
-        </Suspense>
+        <group ref={avatarFlop} position={[0, HIP_PIVOT, 0]}>
+          <group position={[0, -HIP_PIVOT, 0]}>
+            <Suspense fallback={null}>
+              <SparkyAvatar />
+            </Suspense>
+          </group>
+        </group>
       </group>
     </>
   );

@@ -230,3 +230,29 @@ export function sfxHeadshot() {
   o.start(t);
   o.stop(t + 0.16);
 }
+
+// A body hitting the floor: low thump plus a short scuff.
+export function sfxThud() {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator();
+  o.type = "sine";
+  o.frequency.setValueAtTime(130, t);
+  o.frequency.exponentialRampToValueAtTime(42, t + 0.22);
+  const g = a.createGain();
+  env(g, t, 0.4, 0.26);
+  o.connect(g).connect(a.destination);
+  o.start(t);
+  o.stop(t + 0.3);
+
+  const src = a.createBufferSource();
+  src.buffer = noiseBuffer(a, 0.14);
+  const f = a.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.value = 500;
+  const ng = a.createGain();
+  env(ng, t, 0.14, 0.14);
+  src.connect(f).connect(ng).connect(a.destination);
+  src.start(t);
+}
