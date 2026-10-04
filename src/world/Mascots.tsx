@@ -41,16 +41,42 @@ useGLTF.preload("/models/sparky_walk.glb");
 // Playable otters — hue-rotations of Sparky's texture, matching the paintings.
 export const CHARACTERS = [
   { id: "gold", name: "SPARKY", hue: 0, swatch: "#e0a33c" },
-  { id: "blue", name: "SURGE", hue: 170, swatch: "#2f7dd1" },
+  { id: "blue", name: "STORMY", hue: 170, swatch: "#2f7dd1" },
   { id: "purple", name: "TRENDY", hue: 285, swatch: "#f472b6" },
   { id: "green", name: "SENDY", hue: 90, swatch: "#52b86a" },
 ];
 
+// Premium skins: tradeable cosmetics (demo-Solana wallet in systems/wallet.ts).
+// `filter` is a full canvas filter string applied to the otter texture.
+export const SKINS = [
+  { id: "midas", name: "MIDAS", filter: "sepia(1) saturate(3) brightness(1.15)", swatch: "#ffd700", price: 3 },
+  { id: "void", name: "VOID", filter: "invert(1)", swatch: "#16213e", price: 5 },
+  { id: "frost", name: "FROST", filter: "saturate(0.35) brightness(1.35) hue-rotate(165deg)", swatch: "#bfe6ff", price: 2 },
+  { id: "toxic", name: "TOXIC", filter: "hue-rotate(55deg) saturate(2.6) brightness(1.1)", swatch: "#7CFC00", price: 2 },
+  { id: "cherry", name: "CHERRY", filter: "hue-rotate(305deg) saturate(1.9)", swatch: "#ff4d6d", price: 1 },
+];
+
+export function nameFor(id: string): string {
+  return (
+    CHARACTERS.find((c) => c.id === id)?.name ??
+    SKINS.find((k) => k.id === id)?.name ??
+    "OTTER"
+  );
+}
+
+// Canvas filter for any character or skin id.
+export function lookFor(id: string): string {
+  const skin = SKINS.find((k) => k.id === id);
+  if (skin) return skin.filter;
+  const hue = CHARACTERS.find((c) => c.id === id)?.hue ?? 0;
+  return hue === 0 ? "" : `hue-rotate(${hue}deg)`;
+}
+
 const tintCache = new Map<string, THREE.Texture>();
 
-function tintTexture(tex: THREE.Texture, hue: number): THREE.Texture {
-  if (hue === 0) return tex;
-  const key = `${tex.uuid}:${hue}`;
+function tintTexture(tex: THREE.Texture, filter: string): THREE.Texture {
+  if (!filter) return tex;
+  const key = `${tex.uuid}:${filter}`;
   const cached = tintCache.get(key);
   if (cached) return cached;
   const img = tex.image as CanvasImageSource & { width: number; height: number };
@@ -59,7 +85,7 @@ function tintTexture(tex: THREE.Texture, hue: number): THREE.Texture {
   c.height = img.height;
   const ctx = c.getContext("2d");
   if (!ctx) return tex;
-  ctx.filter = `hue-rotate(${hue}deg)`;
+  ctx.filter = filter;
   ctx.drawImage(img, 0, 0);
   const t = new THREE.CanvasTexture(c);
   t.flipY = tex.flipY;
@@ -73,6 +99,10 @@ function tintTexture(tex: THREE.Texture, hue: number): THREE.Texture {
 
 // Clone materials once, then swap their map for the tinted variant.
 function applyHue(root: THREE.Object3D, hue: number) {
+  applyLook(root, hue === 0 ? "" : `hue-rotate(${hue}deg)`);
+}
+
+function applyLook(root: THREE.Object3D, filter: string) {
   root.traverse((o) => {
     const mesh = o as THREE.Mesh;
     if (!mesh.isMesh) return;
@@ -88,7 +118,7 @@ function applyHue(root: THREE.Object3D, hue: number) {
         else mesh.material = clone;
       }
       const mat = (Array.isArray(mesh.material) ? mesh.material[i] : mesh.material) as THREE.MeshStandardMaterial;
-      mat.map = tintTexture(mat.userData.origMap as THREE.Texture, hue);
+      mat.map = tintTexture(mat.userData.origMap as THREE.Texture, filter);
       mat.needsUpdate = true;
     });
   });
@@ -97,11 +127,13 @@ function applyHue(root: THREE.Object3D, hue: number) {
 // Reusable otter rig: cloned skeleton, idle/walk blend, hue tint.
 // Drives the local third-person avatar AND remote multiplayer players.
 export function OtterRig({
-  hue,
+  hue = 0,
+  look,
   getMoving,
   getSpeed,
 }: {
-  hue: number;
+  hue?: number;
+  look?: string; // full canvas filter; overrides hue when set
   getMoving: () => boolean;
   getSpeed: () => number;
 }) {
@@ -128,9 +160,10 @@ export function OtterRig({
   }, [idleAnim.actions, walkAnim.actions]);
 
   useEffect(() => {
-    applyHue(idleScene, hue);
-    applyHue(walkScene, hue);
-  }, [hue, idleScene, walkScene]);
+    const filter = look ?? (hue === 0 ? "" : `hue-rotate(${hue}deg)`);
+    applyLook(idleScene, filter);
+    applyLook(walkScene, filter);
+  }, [hue, look, idleScene, walkScene]);
 
   useFrame(() => {
     const moving = getMoving();
@@ -183,7 +216,7 @@ export function SparkyAvatar() {
   const character = useStore((s) => s.character);
   return (
     <OtterRig
-      hue={hueFor(character)}
+      look={lookFor(character)}
       getMoving={() => feel.avatarMoving}
       getSpeed={() => feel.avatarSpeed}
     />

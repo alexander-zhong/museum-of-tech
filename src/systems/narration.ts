@@ -1,4 +1,4 @@
-import { lessons } from "../education/content";
+import { ROOM_INTROS } from "./room-intros";
 import { useStore } from "../store";
 
 // The tour guide's script. Audio files are optional: if public/audio/<id>.mp3
@@ -44,7 +44,7 @@ export const LINES: Record<string, string> = {
 };
 
 // New educational scripts use new audio IDs, avoiding the old exhibit recordings.
-for (const lesson of lessons) LINES[`learn-${lesson.id}`] = `${lesson.name}. ${lesson.question} Approach the illuminated station and press E to experiment.`;
+for (const [room, text] of Object.entries(ROOM_INTROS)) LINES[`learn-${room}`] = text;
 LINES["evolution-intro"] = "Welcome to the evolution of modern computing. Explore four breakthroughs: transistor, integrated circuit, compiler, and network. Walk up to each station and press E. The Counter-Strike room is at the end of the hall.";
 const played = new Set<string>();
 const REPEATABLE = new Set([
@@ -64,10 +64,29 @@ let speaking = false;
 let currentAudio: HTMLAudioElement | null = null;
 let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
-export function say(id: string) {
+export function stopNarration() {
+  if (clearTimer) clearTimeout(clearTimer);
+  clearTimer = null;
+  if (currentAudio) {
+    currentAudio.onended = null;
+    currentAudio.onerror = null;
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  speaking = false;
+  useStore.getState().set({ subtitle: null });
+}
+
+// Room introductions take priority and play once per game session.
+export function narrateRoom(room: string | null) {
+  stopNarration();
+  if (room && ROOM_INTROS[room]) say(`learn-${room}`);
+}
+
+export function say(id: string, repeat = false) {
   const text = LINES[id];
   if (!text) return;
-  if (played.has(id) && !REPEATABLE.has(id)) return;
+  if (!repeat && played.has(id) && !REPEATABLE.has(id)) return;
   if (speaking) return; // never interrupt the narrator; drop the line
   played.add(id);
   speaking = true;
@@ -75,18 +94,29 @@ export function say(id: string) {
   useStore.getState().set({ subtitle: text });
   const duration = 1000 + text.length * 55;
 
+  const fallback = () => {
+    if (clearTimer) clearTimeout(clearTimer);
+    clearTimer = setTimeout(stopNarration, duration);
+  };
+  fallback();
   try {
-    currentAudio = new Audio(`/audio/${id}.mp3`);
-    currentAudio.play().catch(() => {
-      /* no audio file yet — subtitles carry it */
+    const audio = new Audio(`/audio/${id}.mp3`);
+    currentAudio = audio;
+    audio.onended = () => {
+      if (currentAudio === audio) stopNarration();
+    };
+    audio.onplaying = () => {
+      if (currentAudio !== audio) return;
+      if (clearTimer) clearTimeout(clearTimer);
+      clearTimer = setTimeout(stopNarration, 60000);
+    };
+    audio.onerror = () => {
+      if (currentAudio === audio) fallback();
+    };
+    void audio.play().catch(() => {
+      if (currentAudio === audio) fallback();
     });
   } catch {
-    /* ignore */
+    // Keep subtitles available when audio cannot be loaded.
   }
-
-  if (clearTimer) clearTimeout(clearTimer);
-  clearTimer = setTimeout(() => {
-    speaking = false;
-    useStore.getState().set({ subtitle: null });
-  }, duration);
 }

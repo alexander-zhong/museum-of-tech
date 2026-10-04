@@ -176,6 +176,63 @@ canvas {
 
 
 
+/* skin shop + demo wallet */
+.skin-shop {
+  margin-top: 22px;
+}
+
+.airdrop-btn {
+  margin-left: 10px;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  background: transparent;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  border-radius: 3px;
+  padding: 3px 8px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.airdrop-btn:hover {
+  background: rgba(2, 120, 255, 0.15);
+}
+
+.skin-btn {
+  position: relative;
+}
+
+.skin-btn .char-swatch {
+  width: 26px;
+  height: 26px;
+}
+
+.skin-price {
+  font-size: 9px;
+  color: var(--orange);
+  letter-spacing: 0.1em;
+}
+
+.skin-btn.owned-skin .skin-price {
+  color: var(--gray);
+}
+
+.wallet-toast {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 26, 33, 0.95);
+  border: 1px solid var(--blue);
+  color: var(--light);
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  padding: 10px 18px;
+  border-radius: 4px;
+  animation: fadein 0.25s ease-out;
+}
+
 /* pause dropdown (Esc) */
 .pause-menu {
   position: absolute;
