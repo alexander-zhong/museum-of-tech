@@ -1,3 +1,4 @@
+import { lessons } from "../education/content";
 import { useStore } from "../store";
 
 // The tour guide's script. Audio files are optional: if public/audio/<id>.mp3
@@ -36,6 +37,9 @@ export const LINES: Record<string, string> = {
     "That's Sparky. He's not an exhibit. He just lives here now. Do not feed him.",
 };
 
+// New educational scripts use new audio IDs, avoiding the old exhibit recordings.
+for (const lesson of lessons) LINES[`learn-${lesson.id}`] = `${lesson.name}. ${lesson.question} Approach the illuminated station and press E to experiment.`;
+LINES["evolution-intro"] = "Welcome to the evolution of modern computing. Explore four breakthroughs: transistor, integrated circuit, compiler, and network. Walk up to each station and press E. The Counter-Strike room is at the end of the hall.";
 const played = new Set<string>();
 const REPEATABLE = new Set([
   "pong-start",
