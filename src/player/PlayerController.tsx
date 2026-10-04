@@ -82,6 +82,17 @@ export function PlayerController() {
         const s = useStore.getState();
         s.set({ view: s.view === "first" ? "third" : "first" });
       }
+      if (e.code === "KeyM") {
+        const s = useStore.getState();
+        if (!s.started) return;
+        if (s.econMenu) {
+          s.set({ econMenu: false });
+          session.lock();
+        } else {
+          s.set({ econMenu: true, buyMenu: false });
+          document.exitPointerLock();
+        }
+      }
     };
     const unsubscribeLesson = useStore.subscribe((state, previous) => {
       if (state.lesson !== previous.lesson) keys.current = {};
