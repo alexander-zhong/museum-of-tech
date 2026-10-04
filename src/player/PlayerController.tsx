@@ -6,11 +6,14 @@ import { collide, roomAt, roomTitle } from "../world/layout";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
-import { sfxFootstep } from "../systems/sfx";
+import { sfxFootstep, startAmbient } from "../systems/sfx";
+import { feel } from "../systems/feel";
 
 const SPEED = 4;
+const SPRINT = 6.2;
 const EYE = 1.6;
 const REACH = 2.8;
+const BASE_FOV = 75;
 
 export function PlayerController() {
   const { camera, scene } = useThree();
@@ -21,6 +24,8 @@ export function PlayerController() {
   const roomTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bobPhase = useRef(0);
   const lastStep = useRef(0);
+  const sprintingNow = useRef(false);
+  const fovExtra = useRef(0);
 
   useEffect(() => {
     camera.position.set(0, EYE, 0.5);
@@ -51,6 +56,9 @@ export function PlayerController() {
       const k = keys.current;
       const fwd = (k.KeyW ? 1 : 0) - (k.KeyS ? 1 : 0);
       const strafe = (k.KeyD ? 1 : 0) - (k.KeyA ? 1 : 0);
+      const sprinting = (k.ShiftLeft || k.ShiftRight) && fwd > 0;
+      const speed = sprinting ? SPRINT : SPEED;
+      sprintingNow.current = !!(sprinting && (fwd || strafe));
       if (fwd || strafe) {
         const dir = new THREE.Vector3();
         camera.getWorldDirection(dir);
@@ -61,7 +69,7 @@ export function PlayerController() {
           .multiplyScalar(fwd)
           .add(side.multiplyScalar(strafe))
           .normalize()
-          .multiplyScalar(SPEED * d);
+          .multiplyScalar(speed * d);
         const [nx, nz] = collide(
           camera.position.x + move.x,
           camera.position.z + move.z,
@@ -69,7 +77,7 @@ export function PlayerController() {
         camera.position.x = nx;
         camera.position.z = nz;
         // head bob + footsteps
-        bobPhase.current += d * 9;
+        bobPhase.current += d * (sprinting ? 12 : 9);
         camera.position.y = EYE + Math.sin(bobPhase.current) * 0.035;
         const stepBeat = Math.floor(bobPhase.current / Math.PI);
         if (stepBeat !== lastStep.current) {
@@ -86,6 +94,17 @@ export function PlayerController() {
         say("idle");
         lastMove.current = performance.now();
       }
+    }
+
+    // FOV: sprint widen + shot kick, one smooth lerp
+    feel.fovKick = Math.max(0, feel.fovKick - d * 14);
+    const targetExtra = (sprintingNow.current ? 6 : 0) + feel.fovKick;
+    fovExtra.current += (targetExtra - fovExtra.current) * Math.min(1, d * 9);
+    const cam = camera as THREE.PerspectiveCamera;
+    const wantFov = BASE_FOV + fovExtra.current;
+    if (Math.abs(cam.fov - wantFov) > 0.01) {
+      cam.fov = wantFov;
+      cam.updateProjectionMatrix();
     }
 
     // room tracking
@@ -135,6 +154,7 @@ export function PlayerController() {
     <PointerLockControls
       onLock={() => {
         useStore.getState().set({ locked: true });
+        startAmbient();
         say("intro");
       }}
       onUnlock={() =>

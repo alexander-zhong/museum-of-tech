@@ -43,9 +43,13 @@ export const WALLS: Wall[] = [
 
 const R = 0.4; // player radius
 
+// Non-wall obstacles (hologram pedestal in the entry hall).
+const OBSTACLES: Wall[] = [{ x: 0, z: -1, w: 1.5, d: 1.5 }];
+const SOLIDS = [...WALLS, ...OBSTACLES];
+
 // Slide the player out of any wall AABB (expanded by player radius).
 export function collide(px: number, pz: number): [number, number] {
-  for (const wall of WALLS) {
+  for (const wall of SOLIDS) {
     const minX = wall.x - wall.w / 2 - R;
     const maxX = wall.x + wall.w / 2 + R;
     const minZ = wall.z - wall.d / 2 - R;

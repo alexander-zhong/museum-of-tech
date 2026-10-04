@@ -82,6 +82,38 @@ export function sfxDing() {
   });
 }
 
+let ambientStarted = false;
+export function startAmbient() {
+  if (ambientStarted) return;
+  const a = ac();
+  if (!a) return;
+  ambientStarted = true;
+  // museum-at-night drone: two detuned low sines + filtered noise bed
+  const master = a.createGain();
+  master.gain.value = 0;
+  master.gain.linearRampToValueAtTime(0.028, a.currentTime + 4);
+  master.connect(a.destination);
+  [55, 55.7].forEach((freq) => {
+    const o = a.createOscillator();
+    o.type = "sine";
+    o.frequency.value = freq;
+    const g = a.createGain();
+    g.gain.value = 0.5;
+    o.connect(g).connect(master);
+    o.start();
+  });
+  const noise = a.createBufferSource();
+  noise.buffer = noiseBuffer(a, 2);
+  noise.loop = true;
+  const f = a.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.value = 220;
+  const ng = a.createGain();
+  ng.gain.value = 0.18;
+  noise.connect(f).connect(ng).connect(master);
+  noise.start();
+}
+
 export function sfxFootstep() {
   const a = ac();
   if (!a) return;

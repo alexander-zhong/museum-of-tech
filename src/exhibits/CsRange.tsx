@@ -5,13 +5,17 @@ import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { registerInteract } from "../systems/interact";
 import { sfxShoot, sfxHit, sfxDing } from "../systems/sfx";
+import { addFovKick } from "../systems/feel";
+
+const MAX_SPARKS = 90;
+const MAX_HOLES = 24;
 
 const TARGETS = 6;
 const TARGET_X = [-3.75, -2.25, -0.75, 0.75, 2.25, 3.75];
 const RESET_MS = 3500;
 
 export function CsRange() {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
   const equipped = useRef(false);
   const gun = useRef<THREE.Group>(null);
   const flash = useRef<THREE.Mesh>(null);
@@ -25,6 +29,68 @@ export function CsRange() {
   const clearedAt = useRef<number | null>(null);
   const best = useRef<number | null>(null);
   const raycaster = useRef(new THREE.Raycaster());
+  const muzzleLight = useRef<THREE.PointLight>(null);
+
+  // --- tracer line ---
+  const tracer = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
+    const mat = new THREE.LineBasicMaterial({
+      color: 0xffcc66,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const line = new THREE.Line(geo, mat);
+    line.visible = false;
+    line.frustumCulled = false;
+    line.raycast = () => undefined;
+    return line;
+  }, []);
+  const tracerUntil = useRef(0);
+
+  // --- spark particles (single pooled Points) ---
+  const sparkGeo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    const arr = new Float32Array(MAX_SPARKS * 3);
+    arr.fill(-100); // park dead particles far below the floor
+    g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+    return g;
+  }, []);
+  const sparks = useRef({
+    vel: new Float32Array(MAX_SPARKS * 3),
+    life: new Float32Array(MAX_SPARKS),
+    next: 0,
+  });
+  const spawnSparks = (point: THREE.Vector3, normal: THREE.Vector3, count: number) => {
+    const pos = sparkGeo.attributes.position.array as Float32Array;
+    const s = sparks.current;
+    for (let n = 0; n < count; n++) {
+      const i = s.next;
+      s.next = (s.next + 1) % MAX_SPARKS;
+      pos[i * 3] = point.x;
+      pos[i * 3 + 1] = point.y;
+      pos[i * 3 + 2] = point.z;
+      s.vel[i * 3] = normal.x * 2 + (Math.random() - 0.5) * 3;
+      s.vel[i * 3 + 1] = normal.y * 2 + Math.random() * 2.5;
+      s.vel[i * 3 + 2] = normal.z * 2 + (Math.random() - 0.5) * 3;
+      s.life[i] = 0.4 + Math.random() * 0.25;
+    }
+    sparkGeo.attributes.position.needsUpdate = true;
+  };
+
+  // --- bullet-hole decal pool ---
+  const holes = useRef<(THREE.Mesh | null)[]>([]);
+  const nextHole = useRef(0);
+  const placeHole = (point: THREE.Vector3, normal: THREE.Vector3) => {
+    const m = holes.current[nextHole.current];
+    nextHole.current = (nextHole.current + 1) % MAX_HOLES;
+    if (!m) return;
+    m.visible = true;
+    m.position.copy(point).addScaledVector(normal, 0.012);
+    m.lookAt(point.clone().add(normal));
+  };
 
   // scoreboard
   const boardCanvas = useMemo(() => {
@@ -141,32 +207,59 @@ export function CsRange() {
       if (clearedAt.current !== null) return; // between rounds
       sfxShoot();
       recoil.current = 1;
+      addFovKick(1.4);
       flashUntil.current = performance.now() + 60;
+      if (muzzleLight.current) muzzleLight.current.intensity = 30;
       if (runStart.current === null) runStart.current = performance.now();
 
       raycaster.current.setFromCamera(new THREE.Vector2(0, 0), camera);
-      raycaster.current.far = 40;
-      const meshes = targets.current.filter(Boolean) as THREE.Object3D[];
-      const hits = raycaster.current.intersectObjects(meshes, true);
-      if (hits.length > 0) {
-        let o: THREE.Object3D | null = hits[0].object;
-        while (o && o.userData.targetIndex === undefined) o = o.parent;
-        if (o) {
-          const i = o.userData.targetIndex as number;
-          if (alive.current[i]) {
-            alive.current[i] = false;
-            sfxHit();
-            if (alive.current.every((a) => !a)) {
-              clearedAt.current = performance.now();
-              const time = clearedAt.current - (runStart.current ?? clearedAt.current);
-              if (best.current === null || time < best.current) best.current = time;
-              sfxDing();
-              say("cs-clear");
-              setTimeout(resetRange, RESET_MS);
-            }
-            drawBoard();
+      raycaster.current.far = 45;
+      const hits = raycaster.current.intersectObjects(scene.children, true);
+      const hit = hits[0];
+
+      // tracer from the muzzle to the impact point (or far into the dark)
+      const muzzle = new THREE.Vector3(0.26, -0.24, -0.85)
+        .applyQuaternion(camera.quaternion)
+        .add(camera.position);
+      const end =
+        hit?.point ??
+        new THREE.Vector3(0, 0, -45).applyQuaternion(camera.quaternion).add(camera.position);
+      const tp = tracer.geometry.attributes.position.array as Float32Array;
+      tp[0] = muzzle.x; tp[1] = muzzle.y; tp[2] = muzzle.z;
+      tp[3] = end.x; tp[4] = end.y; tp[5] = end.z;
+      tracer.geometry.attributes.position.needsUpdate = true;
+      tracer.visible = true;
+      tracerUntil.current = performance.now() + 55;
+
+      if (!hit) return;
+      const normal = hit.face
+        ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
+        : new THREE.Vector3(0, 1, 0);
+
+      // did we hit a target?
+      let o: THREE.Object3D | null = hit.object;
+      while (o && o.userData.targetIndex === undefined) o = o.parent;
+      if (o) {
+        const i = o.userData.targetIndex as number;
+        if (alive.current[i]) {
+          alive.current[i] = false;
+          sfxHit();
+          spawnSparks(hit.point, normal, 14);
+          s.set({ hitAt: performance.now() });
+          if (alive.current.every((a) => !a)) {
+            clearedAt.current = performance.now();
+            const time = clearedAt.current - (runStart.current ?? clearedAt.current);
+            if (best.current === null || time < best.current) best.current = time;
+            sfxDing();
+            say("cs-clear");
+            setTimeout(resetRange, RESET_MS);
           }
+          drawBoard();
         }
+      } else {
+        // environment hit: bullet hole + a few sparks
+        placeHole(hit.point, normal);
+        spawnSparks(hit.point, normal, 5);
       }
     };
     window.addEventListener("mousedown", onShoot);
@@ -175,7 +268,7 @@ export function CsRange() {
       window.removeEventListener("mousedown", onShoot);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camera]);
+  }, [camera, scene]);
 
   useFrame((state, dt) => {
     // viewmodel follows the camera
@@ -194,6 +287,32 @@ export function CsRange() {
     }
     if (flash.current) {
       flash.current.visible = performance.now() < flashUntil.current;
+    }
+    if (muzzleLight.current && muzzleLight.current.intensity > 0) {
+      muzzleLight.current.intensity = Math.max(0, muzzleLight.current.intensity - dt * 400);
+    }
+    if (tracer.visible && performance.now() > tracerUntil.current) {
+      tracer.visible = false;
+    }
+    // spark physics
+    {
+      const pos = sparkGeo.attributes.position.array as Float32Array;
+      const sp = sparks.current;
+      let any = false;
+      for (let i = 0; i < MAX_SPARKS; i++) {
+        if (sp.life[i] <= 0) continue;
+        sp.life[i] -= dt;
+        if (sp.life[i] <= 0) {
+          pos[i * 3 + 1] = -100;
+        } else {
+          sp.vel[i * 3 + 1] -= 9.8 * dt;
+          pos[i * 3] += sp.vel[i * 3] * dt;
+          pos[i * 3 + 1] += sp.vel[i * 3 + 1] * dt;
+          pos[i * 3 + 2] += sp.vel[i * 3 + 2] * dt;
+        }
+        any = true;
+      }
+      if (any) sparkGeo.attributes.position.needsUpdate = true;
     }
     // targets flip down when dead, pop back up on reset
     targets.current.forEach((g, i) => {
@@ -280,6 +399,33 @@ export function CsRange() {
       <pointLight position={[0, 3.2, -31]} color="#ffd9a0" intensity={50} distance={13} decay={1.6} />
       <pointLight position={[0, 2.6, -36.5]} color="#fff0d0" intensity={40} distance={10} decay={1.6} />
 
+      {/* ---- shooting FX ---- */}
+      <primitive object={tracer} />
+      <points geometry={sparkGeo} raycast={() => null}>
+        <pointsMaterial
+          size={0.035}
+          color="#ffb347"
+          transparent
+          opacity={0.95}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          sizeAttenuation
+        />
+      </points>
+      {Array.from({ length: MAX_HOLES }, (_, i) => (
+        <mesh
+          key={`hole-${i}`}
+          visible={false}
+          raycast={() => null}
+          ref={(m) => {
+            holes.current[i] = m;
+          }}
+        >
+          <circleGeometry args={[0.035, 10]} />
+          <meshBasicMaterial color="#0a0a0d" transparent opacity={0.9} />
+        </mesh>
+      ))}
+
       {/* ---- gun viewmodel (follows camera) ---- */}
       <group ref={gun} visible={false}>
         <mesh raycast={() => null}>
@@ -290,6 +436,14 @@ export function CsRange() {
           <boxGeometry args={[0.06, 0.14, 0.07]} />
           <meshStandardMaterial color="#2c2c33" roughness={0.5} />
         </mesh>
+        <pointLight
+          ref={muzzleLight}
+          position={[0, 0.01, -0.3]}
+          color="#ffcc55"
+          intensity={0}
+          distance={6}
+          decay={1.8}
+        />
         <mesh ref={flash} position={[0, 0.01, -0.26]} visible={false} raycast={() => null}>
           <planeGeometry args={[0.16, 0.16]} />
           <meshBasicMaterial

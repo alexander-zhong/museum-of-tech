@@ -1,7 +1,7 @@
 import { useStore } from "../store";
 
 export function Hud() {
-  const { locked, prompt, subtitle, roomTitle } = useStore();
+  const { locked, prompt, subtitle, roomTitle, hitAt } = useStore();
 
   return (
     <div className="hud">
@@ -28,6 +28,11 @@ export function Hud() {
       {locked && (
         <>
           <div className="crosshair" />
+          {hitAt > 0 && (
+            <div key={hitAt} className="hitmarker">
+              <span /><span /><span /><span />
+            </div>
+          )}
           {prompt && <div className="prompt">{prompt}</div>}
           {roomTitle && <div className="room-title">{roomTitle}</div>}
         </>

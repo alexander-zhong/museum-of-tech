@@ -3,6 +3,80 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { WALLS, WALL_HEIGHT } from "./layout";
 
+// Fake volumetric god-ray cone under each exhibit light.
+function LightCone({ pos, color }: { pos: [number, number, number]; color: string }) {
+  return (
+    <mesh position={[pos[0], pos[1] / 2 + 0.2, pos[2]]} raycast={() => null}>
+      <coneGeometry args={[1.9, pos[1] + 0.4, 24, 1, true]} />
+      <meshBasicMaterial
+        color={color}
+        transparent
+        opacity={0.055}
+        side={THREE.DoubleSide}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+// Entry-hall centerpiece: a slowly rotating hologram.
+function Hologram() {
+  const spin = useRef<THREE.Group>(null);
+  const ring = useRef<THREE.Mesh>(null);
+
+  useFrame((state, dt) => {
+    if (spin.current) {
+      spin.current.rotation.y += dt * 0.5;
+      spin.current.position.y = 1.7 + Math.sin(state.clock.elapsedTime * 0.9) * 0.08;
+    }
+    if (ring.current) ring.current.rotation.z += dt * 0.25;
+  });
+
+  return (
+    <group position={[0, 0, -1]}>
+      {/* pedestal */}
+      <mesh position={[0, 0.35, 0]}>
+        <cylinderGeometry args={[0.55, 0.7, 0.7, 24]} />
+        <meshStandardMaterial color="#1e2430" roughness={0.4} metalness={0.5} />
+      </mesh>
+      <mesh position={[0, 0.72, 0]}>
+        <cylinderGeometry args={[0.45, 0.45, 0.04, 24]} />
+        <meshBasicMaterial color="#0278ff" />
+      </mesh>
+      {/* floating wireframe core */}
+      <group ref={spin}>
+        <mesh raycast={() => null}>
+          <icosahedronGeometry args={[0.5, 1]} />
+          <meshBasicMaterial color="#0278ff" wireframe transparent opacity={0.85} />
+        </mesh>
+        <mesh raycast={() => null}>
+          <icosahedronGeometry args={[0.28, 0]} />
+          <meshBasicMaterial color="#66b3ff" transparent opacity={0.5} />
+        </mesh>
+      </group>
+      {/* orbit ring */}
+      <mesh ref={ring} position={[0, 1.7, 0]} rotation={[1.2, 0, 0]} raycast={() => null}>
+        <torusGeometry args={[0.8, 0.012, 8, 48]} />
+        <meshBasicMaterial color="#fc7900" transparent opacity={0.8} />
+      </mesh>
+      {/* beam */}
+      <mesh position={[0, 1.3, 0]} raycast={() => null}>
+        <coneGeometry args={[0.45, 1.2, 20, 1, true]} />
+        <meshBasicMaterial
+          color="#0278ff"
+          transparent
+          opacity={0.1}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <pointLight position={[0, 1.8, 0]} color="#0278ff" intensity={10} distance={7} decay={1.8} />
+    </group>
+  );
+}
+
 // Dust motes drifting in the spotlight beams — classic museum shot.
 function Dust() {
   const points = useRef<THREE.Points>(null);
@@ -92,6 +166,11 @@ export function Museum() {
           decay={1.6}
         />
       ))}
+      {/* god-ray cones over the four exhibits */}
+      {EXHIBIT_LIGHTS.slice(0, 4).map((l, i) => (
+        <LightCone key={`cone-${i}`} pos={l.pos} color={l.color} />
+      ))}
+      <Hologram />
       <Dust />
     </group>
   );

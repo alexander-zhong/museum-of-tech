@@ -113,6 +113,34 @@ canvas {
   box-shadow: 0 0 6px rgba(252, 121, 0, 0.8);
 }
 
+/* CS-style hitmarker: four ticks around the crosshair, flash and fade */
+.hitmarker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  animation: hitfade 0.25s ease-out forwards;
+}
+
+.hitmarker span {
+  position: absolute;
+  width: 9px;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(252, 121, 0, 0.9);
+}
+
+.hitmarker span:nth-child(1) { transform: translate(-14px, -12px) rotate(45deg); }
+.hitmarker span:nth-child(2) { transform: translate(5px, -12px) rotate(-45deg); }
+.hitmarker span:nth-child(3) { transform: translate(-14px, 10px) rotate(-45deg); }
+.hitmarker span:nth-child(4) { transform: translate(5px, 10px) rotate(45deg); }
+
+@keyframes hitfade {
+  0% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+
 .prompt {
   position: absolute;
   left: 50%;
