@@ -25,15 +25,19 @@ const FLASH_Z: Record<string, number> = {
 const RIFLE_SCALE = 0.002; // ~0.62 m long
 const RIFLE_OFFSET: [number, number, number] = [0, -0.108, 0.273];
 
-// The pack's own palette is near-greyscale, which reads as a grey blob under
-// museum lighting. Warm the wood and lift the metals so the gun has parts you
-// can tell apart. Delete this map to get the asset's raw colours back.
+// The pack paints 91% of this gun in three shades of grey a few percent
+// apart, so it reads as one blob however it is lit. These pull the parts
+// apart on BOTH axes that survive flat ambient light: brightness (near-black
+// receiver against bright steel) and temperature (warm wood against cool
+// metal). Delete this map for the asset's raw colours.
+// DarkMetal is 45% of the surface, so it carries the body and sits mid-tone;
+// Black (24%) drops to grip/detail dark; Metal (21%) is the bright highlight.
 const RIFLE_PALETTE: Record<string, string> = {
-  Wood: "#8a5a30",
-  DarkWood: "#6d4425",
-  Metal: "#70747a",
-  DarkMetal: "#4b4f55",
-  Black: "#2a2b2e",
+  Wood: "#b06e30",
+  DarkWood: "#92521f",
+  Metal: "#b9c0c7",
+  DarkMetal: "#5c646d",
+  Black: "#15171a",
 };
 
 function RifleModel() {
@@ -598,14 +602,15 @@ export function CsRange() {
 
       {/* ---- gun viewmodel (follows camera, shape per weapon) ---- */}
       <group ref={gun} visible={false}>
-        {/* Travels with the gun. The museum is deliberately dim and the
-            viewmodel is inches from the camera, so without its own key light
-            it reads as a silhouette in half the building. Short range so it
-            lights the weapon and not the room. */}
+        {/* Travels with the gun, because the museum is dim and the viewmodel
+            would otherwise be a silhouette in half the building. Kept weak on
+            purpose: it sits ~0.3 m from the surface and falls off with the
+            square of that, so it is far closer than any room light. At 1.6 it
+            blew the lit faces to white and flattened the whole gun. */}
         <pointLight
-          position={[0.12, 0.3, 0.12]}
+          position={[0.14, 0.26, 0.1]}
           color="#ffe6c4"
-          intensity={1.6}
+          intensity={0.22}
           distance={1.1}
           decay={2}
         />
