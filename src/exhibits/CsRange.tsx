@@ -23,7 +23,8 @@ const MAX_HOLES = 24;
 const TARGETS = 6;
 const TARGET_X = [-3.75, -2.25, -0.75, 0.75, 2.25, 3.75];
 const TARGET_HUES = CHARACTERS.map((c) => c.hue);
-const RESET_MS = 3500;
+const RESPAWN_MS = 1500;
+const DRILL_MS = 30000;
 
 export function CsRange() {
   const { camera, scene } = useThree();
@@ -40,9 +41,22 @@ export function CsRange() {
 
   const targets = useRef<(THREE.Group | null)[]>([]);
   const alive = useRef<boolean[]>(Array(TARGETS).fill(true));
-  const runStart = useRef<number | null>(null);
-  const clearedAt = useRef<number | null>(null);
-  const best = useRef<number | null>(null);
+  // per-bot strafe pattern + respawn clock
+  const bots = useRef(
+    TARGET_X.map((x) => ({
+      baseX: x,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.7 + Math.random() * 0.9,
+      amp: 0.35 + Math.random() * 0.25,
+      deadAt: 0,
+    })),
+  );
+  // 30-second kill drill
+  const kills = useRef(0);
+  const drillEnd = useRef<number | null>(null);
+  const drillOverAt = useRef(0);
+  const best = useRef(0);
+  const boardTimer = useRef(0);
   const raycaster = useRef(new THREE.Raycaster());
   const muzzleLight = useRef<THREE.PointLight>(null);
 
@@ -123,7 +137,6 @@ export function CsRange() {
   const drawBoard = () => {
     const ctx = boardCanvas.getContext("2d");
     if (!ctx) return;
-    const down = alive.current.filter((a) => !a).length;
     ctx.fillStyle = "#101a21";
     ctx.fillRect(0, 0, 640, 160);
     ctx.strokeStyle = "#fc7900";
@@ -132,24 +145,24 @@ export function CsRange() {
     ctx.font = "bold 44px monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#fc7900";
-    if (clearedAt.current !== null && runStart.current !== null) {
-      const secs = ((clearedAt.current - runStart.current) / 1000).toFixed(2);
-      ctx.fillText(`CLEAR  ${secs}s`, 320, 70);
+    const now = performance.now();
+    if (drillEnd.current !== null) {
+      const left = Math.max(0, Math.ceil((drillEnd.current - now) / 1000));
+      ctx.fillText(`KILLS ${kills.current}`, 320, 70);
       ctx.font = "26px monospace";
       ctx.fillStyle = "#9ca3af";
-      ctx.fillText(
-        best.current !== null ? `BEST ${(best.current / 1000).toFixed(2)}s` : "",
-        320,
-        115,
-      );
+      ctx.fillText(`${left}s LEFT`, 320, 115);
+    } else if (now - drillOverAt.current < 5000) {
+      ctx.fillText(`SCORE ${kills.current}`, 320, 70);
+      ctx.font = "26px monospace";
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillText(`BEST ${best.current}`, 320, 115);
     } else {
-      ctx.fillText(`TARGETS ${down}/${TARGETS}`, 320, 70);
+      ctx.fillText("30-SECOND DRILL", 320, 70);
       ctx.font = "26px monospace";
       ctx.fillStyle = "#9ca3af";
       ctx.fillText(
-        best.current !== null
-          ? `BEST ${(best.current / 1000).toFixed(2)}s`
-          : "TIMER STARTS ON FIRST SHOT",
+        best.current > 0 ? `BEST ${best.current} · SHOOT TO START` : "SHOOT A BOT TO START",
         320,
         115,
       );
@@ -195,12 +208,6 @@ export function CsRange() {
     return t;
   }, []);
 
-  const resetRange = () => {
-    alive.current = Array(TARGETS).fill(true);
-    runStart.current = null;
-    clearedAt.current = null;
-    drawBoard();
-  };
 
   useEffect(() => {
     drawBoard();
@@ -223,10 +230,6 @@ export function CsRange() {
           muzzleLight.current.intensity = def.sniper ? 60 : 30;
         }
       }
-      if (runStart.current === null && clearedAt.current === null) {
-        runStart.current = now;
-      }
-
       raycaster.current.setFromCamera(new THREE.Vector2(0, 0), camera);
       raycaster.current.far = def.range;
       const hits = raycaster.current.intersectObjects(scene.children, true);
@@ -279,24 +282,24 @@ export function CsRange() {
       // did we hit a target?
       let o: THREE.Object3D | null = hit.object;
       while (o && o.userData.targetIndex === undefined) o = o.parent;
-      if (o && clearedAt.current === null) {
+      if (o) {
         const i = o.userData.targetIndex as number;
         if (alive.current[i]) {
           alive.current[i] = false;
+          bots.current[i].deadAt = now;
           sfxHit();
           spawnSparks(hit.point, normal, def.sparks + 4);
-          s.set({ hitAt: performance.now() });
-          if (alive.current.every((a) => !a)) {
-            clearedAt.current = performance.now();
-            const time = clearedAt.current - (runStart.current ?? clearedAt.current);
-            if (best.current === null || time < best.current) best.current = time;
-            sfxDing();
-            say("cs-clear");
-            setTimeout(resetRange, RESET_MS);
+          s.set({ hitAt: now });
+          // drill: first kill starts the 30s clock
+          if (drillEnd.current === null && now - drillOverAt.current > 5000) {
+            drillEnd.current = now + DRILL_MS;
+            kills.current = 1;
+          } else if (drillEnd.current !== null) {
+            kills.current++;
           }
           drawBoard();
         }
-      } else if (!o) {
+      } else {
         // environment hit: bullet hole + a few sparks (knife just scratches)
         if (!def.knife) placeHole(hit.point, normal);
         spawnSparks(hit.point, normal, def.knife ? 2 : 5);
@@ -398,12 +401,41 @@ export function CsRange() {
       }
       if (any) sparkGeo.attributes.position.needsUpdate = true;
     }
-    // dead bots faceplant toward the shooter, pop back up on reset
-    targets.current.forEach((g, i) => {
-      if (!g) return;
-      const want = alive.current[i] ? 0 : Math.PI / 2;
-      g.rotation.x += (want - g.rotation.x) * Math.min(1, dt * 9);
-    });
+    // bots: strafe while alive, faceplant when hit, respawn solo (Valorant-style)
+    {
+      const now = performance.now();
+      const t = state.clock.elapsedTime;
+      targets.current.forEach((g, i) => {
+        if (!g) return;
+        const bot = bots.current[i];
+        if (!alive.current[i] && now - bot.deadAt > RESPAWN_MS) {
+          alive.current[i] = true; // back up, no grudges
+        }
+        if (alive.current[i]) {
+          g.position.x = bot.baseX + Math.sin(t * bot.speed + bot.phase) * bot.amp;
+          g.position.z = -37.3 + Math.sin(t * bot.speed * 0.63 + bot.phase * 2) * 0.22;
+        }
+        const want = alive.current[i] ? 0 : Math.PI / 2;
+        g.rotation.x += (want - g.rotation.x) * Math.min(1, dt * 9);
+      });
+
+      // drill clock
+      if (drillEnd.current !== null && now >= drillEnd.current) {
+        drillEnd.current = null;
+        drillOverAt.current = now;
+        if (kills.current > best.current) best.current = kills.current;
+        sfxDing();
+        say("cs-clear");
+        drawBoard();
+      }
+      boardTimer.current += dt;
+      if (boardTimer.current > 0.5) {
+        boardTimer.current = 0;
+        if (drillEnd.current !== null || now - drillOverAt.current < 6000) {
+          drawBoard();
+        }
+      }
+    }
   });
 
   return (

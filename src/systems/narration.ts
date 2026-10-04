@@ -32,7 +32,7 @@ export const LINES: Record<string, string> = {
   idle: "You good? The exhibits are right there.",
   "entry-cs":
     "Counter-Strike. Built by Minh Le, an SFU student, between assignments. The GOAT walked these halls. Range is hot.",
-  "cs-clear": "All targets down. Minh Le would nod slightly. That's huge.",
+  "cs-clear": "Drill over. Score's on the board. The bots hold no grudges.",
   sparky:
     "That's Sparky. He's not an exhibit. He just lives here now. Do not feed him.",
   "pvp-death":
