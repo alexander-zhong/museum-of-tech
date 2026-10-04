@@ -13,7 +13,7 @@ import {
 import { weaponById } from "./weapons";
 import { sfxDeath, sfxHeadshot, sfxHit, sfxHurt, sfxKill } from "./sfx";
 import { session } from "./feel";
-import { pointBlocked, roomAt } from "../world/layout";
+import { pointBlocked } from "../world/layout";
 import { CHARACTERS } from "../world/Mascots";
 import { say } from "./narration";
 
@@ -79,9 +79,10 @@ export function damagePlayer(
 ) {
   const victim = peers.get(peerId);
   if (!victim || victim.state.hp <= 0) return;
-  // PvP only inside the arena — both shooter and victim must be there
+  // PvP only inside the arena. The victim re-checks its own room in onHit,
+  // so the shooter only gates on itself (a laggy position packet shouldn't
+  // eat a legitimate hit).
   if (useStore.getState().room !== "dm") return;
-  if (roomAt(victim.state.p[0], victim.state.p[2]) !== "dm") return;
   const def = weaponById(weaponId);
   const dmg = Math.max(
     1,

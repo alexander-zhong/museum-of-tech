@@ -511,7 +511,7 @@ export function CsRange() {
 
       {/* ---- shooting FX ---- */}
       <primitive object={tracer} />
-      <points geometry={sparkGeo} raycast={() => null}>
+      <points geometry={sparkGeo} raycast={() => null} frustumCulled={false}>
         <pointsMaterial
           size={0.035}
           color="#ffb347"
