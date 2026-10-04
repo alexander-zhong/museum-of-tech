@@ -7,6 +7,7 @@ import { registerInteract } from "../systems/interact";
 import { sfxShoot, sfxHit, sfxDing } from "../systems/sfx";
 import { addFovKick, feel } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
+import { sendShot } from "../systems/net";
 
 const FLASH_Z: Record<string, number> = {
   pistol: -0.2,
@@ -257,6 +258,14 @@ export function CsRange() {
         tracer.geometry.attributes.position.needsUpdate = true;
         tracer.visible = true;
         tracerUntil.current = now + 55;
+        try {
+          sendShot({
+            a: [muzzle.x, muzzle.y, muzzle.z],
+            b: [end.x, end.y, end.z],
+          });
+        } catch {
+          /* no peers yet */
+        }
       }
 
       if (!hit) return;

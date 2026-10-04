@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sparky, Gallery } from "./world/Mascots";
+import { RemotePlayers } from "./world/RemotePlayers";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { Museum } from "./world/Museum";
 import { PlayerController } from "./player/PlayerController";
@@ -25,6 +26,7 @@ export default function App() {
           <Sparky />
           <Gallery />
         </Suspense>
+        <RemotePlayers />
         <Pong />
         <Eniac />
         <Agc />
