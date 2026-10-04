@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
+import { Sparky, Gallery } from "./world/Mascots";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { Museum } from "./world/Museum";
 import { PlayerController } from "./player/PlayerController";
@@ -19,6 +21,10 @@ export default function App() {
         <color attach="background" args={["#05060a"]} />
         <fog attach="fog" args={["#05060a", 20, 60]} />
         <Museum />
+        <Suspense fallback={null}>
+          <Sparky />
+          <Gallery />
+        </Suspense>
         <Pong />
         <Eniac />
         <Agc />

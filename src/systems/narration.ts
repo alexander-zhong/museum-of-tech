@@ -33,6 +33,8 @@ export const LINES: Record<string, string> = {
     "Counter-Strike. Built by Minh Le, an SFU student, between assignments. The GOAT walked these halls. Grab the gun.",
   "cs-gun": "There it is. Point, click, make SFU proud. And don't rush B.",
   "cs-clear": "All targets down. Minh Le would nod slightly. That's huge.",
+  sparky:
+    "That's Sparky. He's not an exhibit. He just lives here now. Do not feed him.",
 };
 
 const played = new Set<string>();

@@ -46,6 +46,7 @@ const R = 0.4; // player radius
 // Non-wall obstacles (pedestal, columns, exhibits, set dressing).
 const OBSTACLES: Wall[] = [
   { x: 0, z: -1, w: 1.5, d: 1.5 }, // hologram pedestal
+  { x: 2.6, z: -2.2, w: 1.1, d: 0.9 }, // Sparky
   // entry columns
   { x: -4, z: -3.3, w: 0.8, d: 0.8 },
   { x: 4, z: -3.3, w: 0.8, d: 0.8 },
