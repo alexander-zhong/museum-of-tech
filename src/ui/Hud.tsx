@@ -14,7 +14,6 @@ export function Hud() {
     prompt,
     subtitle,
     roomTitle,
-    room,
     hitAt,
     buyMenu,
     weapon,
@@ -111,8 +110,7 @@ export function Hud() {
           <MuseumMap />
           {!dead && <div className="crosshair" />}
           {hurtAt > 0 && <div key={hurtAt} className="hurt-flash" />}
-          {(room === "dm" || dead) && (
-            <div className="vitals">
+          <div className="vitals">
               <div className="hp-row">
                 <span className="hp-num">{hp}</span>
                 <div className="hp-track">
@@ -127,8 +125,7 @@ export function Hud() {
                 <span className="kd-sep">/</span>
                 <span className="kd-d">{deaths}</span> D
               </div>
-            </div>
-          )}
+          </div>
           {feed.length > 0 && (
             <div className="killfeed">
               {feed.map((f) => (

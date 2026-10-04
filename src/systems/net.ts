@@ -82,3 +82,8 @@ export const sendFrag = (f: NetFrag) => fragAction.send(f).catch(nop);
 room.onPeerLeave = (id) => {
   peers.delete(id);
 };
+
+// dev console access for debugging
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__net = { peers, myId };
+}
