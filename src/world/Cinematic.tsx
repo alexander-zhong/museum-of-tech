@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { feel } from "../systems/feel";
+import { LINES, stopNarration } from "../systems/narration";
 
 // Demo tour (P): a ~2 minute guided walkthrough of every exhibit with its
 // own ElevenLabs voiceover (public/audio/demo-N.mp3, one per shot). While
@@ -14,19 +15,21 @@ type Shot =
   | { kind: "dolly"; from: [number, number, number]; to: [number, number, number]; look: [number, number, number]; dur: number }
   | { kind: "orbit"; center: [number, number, number]; r: number; y: number; a0: number; a1: number; dur: number };
 
-const TOUR: Shot[] = [
+type TourShot = Shot & { audioSrc?: string; lesson?: string };
+
+const TOUR: TourShot[] = [
   // 0. entry hall orbit (kept tight so it stays inside the hall)
   { kind: "orbit", center: [0, 1.5, -2.5], r: 3.0, y: 2.0, a0: 0.7, a1: 3.4, dur: 10 },
   // 1. corridor push
   { kind: "dolly", from: [0, 1.9, -4.6], to: [0, 1.7, -13.5], look: [0, 1.3, -20], dur: 10 },
   // 2. room 01 · transistor (west near) — in through the door gap
-  { kind: "dolly", from: [-3.4, 1.6, -9.5], to: [-8.5, 1.6, -9.5], look: [-12.4, 1.3, -9.5], dur: 12 },
+  { kind: "dolly", from: [-3.4, 1.6, -9.5], to: [-8.5, 1.6, -9.5], look: [-12.4, 1.3, -9.5], dur: 12, audioSrc: "/audio/learn-eniac.mp3", lesson: "eniac" },
   // 3. room 02 · integrated circuit (east near)
-  { kind: "dolly", from: [3.4, 1.6, -9.5], to: [8.5, 1.6, -9.5], look: [12.4, 1.3, -9.5], dur: 12 },
+  { kind: "dolly", from: [3.4, 1.6, -9.5], to: [8.5, 1.6, -9.5], look: [12.4, 1.3, -9.5], dur: 12, audioSrc: "/audio/learn-bombe.mp3", lesson: "bombe" },
   // 4. room 03 · compiler (west far)
-  { kind: "dolly", from: [-3.4, 1.6, -20.5], to: [-8.5, 1.6, -20.5], look: [-12.3, 1.3, -20.5], dur: 12 },
+  { kind: "dolly", from: [-3.4, 1.6, -20.5], to: [-8.5, 1.6, -20.5], look: [-12.3, 1.3, -20.5], dur: 12, audioSrc: "/audio/learn-pong.mp3", lesson: "pong" },
   // 5. room 04 · network (east far)
-  { kind: "dolly", from: [3.4, 1.6, -20.5], to: [8.5, 1.6, -20.5], look: [12.4, 1.3, -20.5], dur: 12 },
+  { kind: "dolly", from: [3.4, 1.6, -20.5], to: [8.5, 1.6, -20.5], look: [12.4, 1.3, -20.5], dur: 12, audioSrc: "/audio/learn-agc.mp3", lesson: "agc" },
   // 6. CS room: push toward the strafing bots
   { kind: "dolly", from: [0, 1.8, -27.2], to: [0, 1.5, -33.5], look: [0, 1.1, -37.3], dur: 13 },
   // 7. portal close-up (east wall of the CS room)
@@ -36,6 +39,25 @@ const TOUR: Shot[] = [
   // 9. finale: slow push from the entrance looking down the museum
   { kind: "dolly", from: [0, 2.0, 1.2], to: [0, 1.7, -2.6], look: [0, 1.4, -12], dur: 10 },
 ];
+
+const CAPTIONS: (string | null)[] = [
+  "This is Otter Origins — our StormHacks 2026 submission. A multiplayer museum where the history of computing is something you play — not something you read.",
+  "Built in 24 hours with React Three Fiber. Four rooms tell the story of your computer — transistor, chip, compiler, network — with an ElevenLabs tour guide narrating every step.",
+  null, // learn-eniac caption resolved from LINES
+  null,
+  null,
+  null,
+  "And the story lands in 1999 — Counter-Strike, built right here at SFU by student Minh Le. So we built him a range: six otter bots, five weapons, a thirty-second drill.",
+  "This portal leads somewhere less educational.",
+  "Full multiplayer deathmatch. No servers, no logins — pure peer-to-peer. Headshots, kill feeds, ragdolls, and a skin marketplace running on Solana.",
+  "Otter Origins. Twenty-four hours, one museum, zero naps. History you can bunny-hop through. Thanks for watching.",
+];
+
+function captionFor(i: number): string | null {
+  const shot = TOUR[i];
+  if (shot?.lesson) return LINES[`learn-${shot.lesson}`] ?? null;
+  return CAPTIONS[i] ?? null;
+}
 
 const ease = (t: number) => t * t * (3 - 2 * t);
 
@@ -53,12 +75,18 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
     audio.current = null;
   };
 
+  const audioDone = () =>
+    !audio.current || audio.current.ended || audio.current.error !== null;
+
   useFrame((_, dt) => {
     if (!cinema) {
       if (started.current) {
         stopAudio();
         feel.cinemaPov = false;
         started.current = false;
+        const sx = useStore.getState();
+        sx.set({ subtitle: null });
+        if (sx.lesson) sx.set({ lesson: null });
       }
       return;
     }
@@ -66,11 +94,19 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
       started.current = true;
       t.current = 0;
       idx.current = -1;
+      stopNarration(); // nothing talks over the demo, no matter who was mid-sentence
     }
     feel.cinemaPov = false;
 
-    // advance shots; -1 means "about to start shot 0"
-    if (idx.current === -1 || t.current >= TOUR[idx.current].dur) {
+    // advance shots; -1 means "about to start shot 0".
+    // A shot holds its final frame until its voiceover finishes
+    // (with a hard cap so a broken file can never hang the tour).
+    const cur = idx.current >= 0 ? TOUR[idx.current] : null;
+    const shotDone =
+      cur !== null &&
+      t.current >= cur.dur &&
+      (audioDone() || t.current >= cur.dur + 20);
+    if (idx.current === -1 || shotDone) {
       idx.current += 1;
       t.current = 0;
       const shot = TOUR[idx.current];
@@ -81,11 +117,17 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
       }
       stopAudio();
       try {
-        audio.current = new Audio(`/audio/demo-${idx.current}.mp3`);
+        audio.current = new Audio(shot.audioSrc ?? `/audio/demo-${idx.current}.mp3`);
         audio.current.play().catch(() => {});
       } catch {
         /* voiceover missing: the tour still runs silent */
       }
+      // the tour "presses E" in each room: open/close its experiment panel
+      const s2 = useStore.getState();
+      if ((shot.lesson ?? null) !== s2.lesson) {
+        s2.set({ lesson: (shot.lesson ?? null) as never });
+      }
+      s2.set({ subtitle: captionFor(idx.current) });
     }
 
     const shot = TOUR[idx.current];

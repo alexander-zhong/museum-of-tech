@@ -6,7 +6,7 @@ import { PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
 import { collide, pointBlocked, roomAt, roomTitle, PORTALS } from "../world/layout";
 import { useStore } from "../store";
-import { say, narrateRoom } from "../systems/narration";
+import { say, stopNarration } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
 import { sfxFootstep, sfxThud, startAmbient } from "../systems/sfx";
 import { feel, session } from "../systems/feel";
@@ -89,6 +89,7 @@ export function PlayerController() {
       }
       if (e.code === "KeyP") {
         const s = useStore.getState();
+        stopNarration(); // cut any in-game narration mid-sentence
         s.set({ cinema: !s.cinema });
         if (!s.cinema) document.exitPointerLock();
         return;
@@ -401,7 +402,6 @@ export function PlayerController() {
           3000,
         );
       }
-      narrateRoom(room);
     }
 
     // crosshair raycast for interactables
