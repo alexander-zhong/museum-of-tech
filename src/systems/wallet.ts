@@ -16,7 +16,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { useStore } from "../store";
-import { SKINS } from "../world/Mascots";
+import { SKINS, rollSkin } from "../world/Mascots";
 import { sendTrade, netHandlers } from "./net";
 import { sfxDing } from "./sfx";
 
@@ -33,17 +33,25 @@ const PRICE_LAMPORTS = 10000; // per displayed "SOL" of skin price — cheap on 
 
 interface WalletState {
   sol: number; // demo balance; in devnet mode this mirrors real balance
-  owned: string[];
+  inv: Record<string, number>; // skin id -> quantity (cases drop duplicates)
 }
 
 function loadState(): WalletState {
   try {
     const raw = localStorage.getItem(LS_WALLET);
-    if (raw) return JSON.parse(raw) as WalletState;
+    if (raw) {
+      const parsed = JSON.parse(raw) as WalletState & { owned?: string[] };
+      if (parsed.owned && !parsed.inv) {
+        // migrate v2 array -> v3 counts
+        parsed.inv = Object.fromEntries(parsed.owned.map((id) => [id, 1]));
+      }
+      parsed.inv ??= {};
+      return { sol: parsed.sol ?? 10, inv: parsed.inv };
+    }
   } catch {
     /* fresh below */
   }
-  return { sol: 10, owned: [] };
+  return { sol: 10, inv: {} };
 }
 
 export const wallet: WalletState = loadState();
@@ -63,10 +71,26 @@ function toast(msg: string) {
   useStore.getState().set({ walletMsg: msg, walletMsgAt: Date.now() });
 }
 
+export function qty(id: string): number {
+  return wallet.inv[id] ?? 0;
+}
+
+function grant(id: string) {
+  wallet.inv[id] = (wallet.inv[id] ?? 0) + 1;
+}
+
+function take(id: string): boolean {
+  if ((wallet.inv[id] ?? 0) <= 0) return false;
+  wallet.inv[id] -= 1;
+  if (wallet.inv[id] <= 0) delete wallet.inv[id];
+  return true;
+}
+
 function syncStore() {
   useStore.getState().set({
     sol: wallet.sol,
-    ownedSkins: [...wallet.owned],
+    ownedSkins: Object.keys(wallet.inv),
+    inv: { ...wallet.inv },
     walletMode: mode,
   });
 }
@@ -178,14 +202,15 @@ export async function airdrop() {
 
 export async function buySkin(id: string) {
   const skin = SKINS.find((k) => k.id === id);
-  if (!skin || wallet.owned.includes(id)) return;
+  if (!skin || qty(id) > 0) return;
 
-  if (mode === "devnet" && conn && kp) {
+  const buyLamports = skin.price * PRICE_LAMPORTS + 5000;
+  if (mode === "devnet" && conn && kp && wallet.sol * 1e9 >= buyLamports) {
     const cost = skin.price * PRICE_LAMPORTS;
     toast(`MINT ${skin.name} … sending devnet tx`);
     try {
       const sig = await memoTx(`modt:mint:${id}`, cost);
-      wallet.owned.push(id);
+      grant(id);
       save();
       await refreshBalance();
       sfxDing();
@@ -205,7 +230,7 @@ export async function buySkin(id: string) {
   }
   setTimeout(() => {
     wallet.sol -= skin.price;
-    wallet.owned.push(id);
+    grant(id);
     save();
     syncStore();
     sfxDing();
@@ -213,14 +238,85 @@ export async function buySkin(id: string) {
   }, 450);
 }
 
+export const CASE_PRICE = 2;
+
+/** Pay for a case, roll a skin, add it to the inventory. Returns the drop. */
+export async function openCase(): Promise<{ id: string } | null> {
+  const caseLamports = CASE_PRICE * PRICE_LAMPORTS + 5000;
+  if (mode === "devnet" && conn && kp && wallet.sol * 1e9 >= caseLamports) {
+    try {
+      toast("OPEN LEGACY CASE … devnet tx");
+      const sig = await memoTx("modt:case", CASE_PRICE * PRICE_LAMPORTS);
+      const drop = rollSkin();
+      grant(drop.id);
+      save();
+      await refreshBalance();
+      console.log(`[wallet] case: ${explorer(sig)}`);
+      return { id: drop.id };
+    } catch {
+      toast("devnet tx failed — airdrop first, or demo mode will cover it");
+      // fall through to demo
+    }
+  }
+  if (wallet.sol < CASE_PRICE) {
+    toast("insufficient SOL for a case — use AIRDROP");
+    return null;
+  }
+  wallet.sol -= CASE_PRICE;
+  const drop = rollSkin();
+  grant(drop.id);
+  save();
+  syncStore();
+  return { id: drop.id };
+}
+
+/** Instant-sell to the museum at half price. */
+export function sellSkin(id: string) {
+  const skin = SKINS.find((k) => k.id === id);
+  if (!skin || !take(id)) return;
+  wallet.sol += skin.price / 2;
+  const s = useStore.getState();
+  if (s.character === id && qty(id) <= 0) s.set({ character: "gold" });
+  save();
+  syncStore();
+  sfxDing();
+  toast(`SOLD ${skin.name} ✓ +${(skin.price / 2).toFixed(1)} SOL`);
+}
+
+/** Marketplace settlement hooks (called from systems/market.ts). */
+export function marketDebit(amount: number): boolean {
+  if (wallet.sol < amount) return false;
+  wallet.sol -= amount;
+  save();
+  syncStore();
+  return true;
+}
+
+export function marketCredit(amount: number) {
+  wallet.sol += amount;
+  save();
+  syncStore();
+}
+
+export function marketTake(id: string): boolean {
+  const ok = take(id);
+  if (ok) {
+    const s = useStore.getState();
+    if (s.character === id && qty(id) <= 0) s.set({ character: "gold" });
+    save();
+    syncStore();
+  }
+  return ok;
+}
+
 export async function tradeSkin(peerId: string, peerName: string, id: string) {
   const skin = SKINS.find((k) => k.id === id);
-  if (!skin || !wallet.owned.includes(id)) return;
+  if (!skin || qty(id) <= 0) return;
 
   const finishLocal = () => {
-    wallet.owned = wallet.owned.filter((k) => k !== id);
+    take(id);
     const s = useStore.getState();
-    if (s.character === id) s.set({ character: "gold" });
+    if (s.character === id && qty(id) <= 0) s.set({ character: "gold" });
     save();
     syncStore();
     try {
@@ -254,8 +350,8 @@ export async function tradeSkin(peerId: string, peerName: string, id: string) {
 
 netHandlers.onTrade = (from, t) => {
   const skin = SKINS.find((k) => k.id === t.skin);
-  if (!skin || wallet.owned.includes(t.skin)) return;
-  wallet.owned.push(t.skin);
+  if (!skin) return;
+  grant(t.skin);
   save();
   syncStore();
   sfxDing();

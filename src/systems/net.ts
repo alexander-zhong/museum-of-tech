@@ -52,11 +52,22 @@ export type NetTrade = {
   skin: string;
 };
 
+export type NetMpList = {
+  items: { skin: string; price: number }[];
+};
+
+export type NetMpBuy = {
+  skin: string;
+  price: number;
+};
+
 export const netHandlers: {
   onHit: ((from: string, hit: NetHit) => void) | null;
   onFrag: ((victim: string, frag: NetFrag) => void) | null;
   onTrade: ((from: string, trade: NetTrade) => void) | null;
-} = { onHit: null, onFrag: null, onTrade: null };
+  onMpList: ((from: string, list: NetMpList) => void) | null;
+  onMpBuy: ((from: string, buy: NetMpBuy) => void) | null;
+} = { onHit: null, onFrag: null, onTrade: null, onMpList: null, onMpBuy: null };
 
 const stateAction = room.makeAction<NetState>("state", {
   onMessage: (s, ctx) => {
@@ -77,6 +88,12 @@ const fragAction = room.makeAction<NetFrag>("frag", {
 const tradeAction = room.makeAction<NetTrade>("trade", {
   onMessage: (t, ctx) => netHandlers.onTrade?.(ctx.peerId, t),
 });
+const mpListAction = room.makeAction<NetMpList>("mplist", {
+  onMessage: (l, ctx) => netHandlers.onMpList?.(ctx.peerId, l),
+});
+const mpBuyAction = room.makeAction<NetMpBuy>("mpbuy", {
+  onMessage: (b, ctx) => netHandlers.onMpBuy?.(ctx.peerId, b),
+});
 
 // All sends are fire-and-forget: a peer can drop mid-flight and we would
 // rather lose the packet than surface an unhandled rejection mid-firefight.
@@ -88,6 +105,9 @@ export const sendHit = (target: string, h: NetHit) =>
 export const sendFrag = (f: NetFrag) => fragAction.send(f).catch(nop);
 export const sendTrade = (target: string, t: NetTrade) =>
   tradeAction.send(t, { target }).catch(nop);
+export const sendMpList = (l: NetMpList) => mpListAction.send(l).catch(nop);
+export const sendMpBuy = (target: string, b: NetMpBuy) =>
+  mpBuyAction.send(b, { target }).catch(nop);
 
 room.onPeerLeave = (id) => {
   peers.delete(id);
