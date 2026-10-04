@@ -51,8 +51,12 @@ function convert(file: string) {
         roughness = 0.75;
         why = "name";
       } else if (/metal|steel|iron|chrome|barrel|receiver/i.test(name)) {
-        metalness = 0.9;
-        roughness = 0.35;
+        // Deliberately not 0.9: a metal has no diffuse colour and shows only
+        // what it reflects, and this scene has no environment map — fully
+        // metallic surfaces come out flat gray. Enough to catch a highlight
+        // off the point lights, little enough to keep the base colour.
+        metalness = 0.3;
+        roughness = 0.4;
         why = "name";
       }
       const std = new THREE.MeshStandardMaterial({
