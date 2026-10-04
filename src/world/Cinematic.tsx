@@ -15,7 +15,7 @@ type Shot =
   | { kind: "dolly"; from: [number, number, number]; to: [number, number, number]; look: [number, number, number]; dur: number }
   | { kind: "orbit"; center: [number, number, number]; r: number; y: number; a0: number; a1: number; dur: number };
 
-type TourShot = Shot & { audioSrc?: string; lesson?: string };
+type TourShot = Shot & { audioSrc?: string; lesson?: string; lessonAt?: number };
 
 const TOUR: TourShot[] = [
   // 0. entry hall orbit (kept tight so it stays inside the hall)
@@ -68,6 +68,7 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
   const idx = useRef(-1);
   const started = useRef(false);
   const audio = useRef<HTMLAudioElement | null>(null);
+  const lessonOpened = useRef(false);
   void head;
 
   const stopAudio = () => {
@@ -122,16 +123,23 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
       } catch {
         /* voiceover missing: the tour still runs silent */
       }
-      // the tour "presses E" in each room: open/close its experiment panel
+      // close the previous room's panel; this room's E-press comes mid-shot
       const s2 = useStore.getState();
-      if ((shot.lesson ?? null) !== s2.lesson) {
-        s2.set({ lesson: (shot.lesson ?? null) as never });
-      }
+      lessonOpened.current = false;
+      if (s2.lesson) s2.set({ lesson: null });
       s2.set({ subtitle: captionFor(idx.current) });
     }
 
     const shot = TOUR[idx.current];
     t.current += dt;
+    if (
+      shot.lesson &&
+      !lessonOpened.current &&
+      t.current >= (shot.lessonAt ?? 4)
+    ) {
+      lessonOpened.current = true;
+      useStore.getState().set({ lesson: shot.lesson as never });
+    }
     const k = ease(Math.min(1, t.current / shot.dur));
 
     if (shot.kind === "dolly") {
