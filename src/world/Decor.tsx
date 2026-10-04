@@ -1,5 +1,4 @@
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useMemo } from "react";
 import * as THREE from "three";
 
 const GOLD = "#c9a24b";
@@ -111,91 +110,6 @@ function CeilPanel({ pos, w = 1.6, d = 0.5, color = "#dfe8ff" }: { pos: [number,
   );
 }
 
-// ---- hanging banner with canvas typography ----
-function Banner({
-  pos,
-  lines,
-  accent,
-}: {
-  pos: [number, number, number];
-  lines: string[];
-  accent: string;
-}) {
-  const tex = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 512;
-    c.height = 1024;
-    const ctx = c.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = "#101a21";
-      ctx.fillRect(0, 0, 512, 1024);
-      ctx.fillStyle = accent;
-      ctx.fillRect(0, 0, 512, 14);
-      ctx.fillRect(0, 1010, 512, 14);
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "bold 92px monospace";
-      lines.forEach((l, i) => {
-        ctx.fillStyle = i === lines.length - 1 ? accent : "#e5e7eb";
-        ctx.fillText(l, 256, 260 + i * 160);
-      });
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, [lines, accent]);
-  return (
-    <group position={pos}>
-      <mesh position={[0, -1.1, 0]} raycast={() => null}>
-        <planeGeometry args={[1.1, 2.2]} />
-        <meshBasicMaterial map={tex} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh raycast={() => null}>
-        <boxGeometry args={[1.2, 0.05, 0.05]} />
-        <meshStandardMaterial color="#444" metalness={0.6} />
-      </mesh>
-    </group>
-  );
-}
-
-// ---- blinking server/relay panel (set dressing for the ENIAC room) ----
-function BlinkenPanel({ pos, rotY = 0 }: { pos: [number, number, number]; rotY?: number }) {
-  const mats = useRef<THREE.MeshStandardMaterial[]>([]);
-  const t = useRef(0);
-  useFrame((_, dt) => {
-    t.current += dt;
-    if (t.current > 0.18) {
-      t.current = 0;
-      mats.current.forEach((m) => {
-        if (m && Math.random() < 0.3) {
-          m.emissiveIntensity = m.emissiveIntensity > 0.5 ? 0.05 : 1.6;
-        }
-      });
-    }
-  });
-  return (
-    <group position={pos} rotation={[0, rotY, 0]}>
-      <mesh>
-        <boxGeometry args={[1.6, 2.6, 0.3]} />
-        <meshStandardMaterial color="#16161f" roughness={0.7} metalness={0.3} />
-      </mesh>
-      {Array.from({ length: 12 }, (_, i) => (
-        <mesh key={i} position={[-0.55 + (i % 4) * 0.37, 0.8 - Math.floor(i / 4) * 0.45, 0.17]}>
-          <sphereGeometry args={[0.04, 8, 8]} />
-          <meshStandardMaterial
-            ref={(m) => {
-              if (m) mats.current[i] = m;
-            }}
-            color="#331a00"
-            emissive={i % 3 === 0 ? "#ff5533" : "#ffaa33"}
-            emissiveIntensity={Math.random() > 0.5 ? 1.6 : 0.05}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 // ---- wooden crates (CS room, de_dust energy) ----
 function Crate({ pos, size = 0.8, rotY = 0 }: { pos: [number, number, number]; size?: number; rotY?: number }) {
   return (
@@ -218,13 +132,11 @@ function Crate({ pos, size = 0.8, rotY = 0 }: { pos: [number, number, number]; s
 export function Decor() {
   return (
     <group>
-      {/* entry hall: columns flanking the corridor mouth + banners */}
+      {/* entry hall columns */}
       <Column pos={[-4, 0, -3.3]} />
       <Column pos={[4, 0, -3.3]} />
       <Column pos={[-9, 0, -0.5]} />
       <Column pos={[9, 0, -0.5]} />
-      <Banner pos={[-6.5, 3.9, -2]} lines={["DEAD", "TECH", "2026"]} accent="#fc7900" />
-      <Banner pos={[6.5, 3.9, -2]} lines={["BORN", "TO", "BUILD"]} accent="#0278ff" />
 
       {/* corridor: ceiling light strip + baseboard glow */}
       {[-6, -10, -14, -18, -22].map((z) => (
@@ -244,17 +156,11 @@ export function Decor() {
       <RopeGuard x={10.3} z={-9.5} width={3.4} axis="z" />
       <RopeGuard x={10.4} z={-20.5} width={3} axis="z" />
 
-      {/* ENIAC room: blinking relay panels fill the walls */}
-      <BlinkenPanel pos={[-8, 1.3, -4.55]} rotY={Math.PI} />
-      <BlinkenPanel pos={[-5.5, 1.3, -4.55]} rotY={Math.PI} />
-      <BlinkenPanel pos={[-8, 1.3, -14.45]} />
-      <BlinkenPanel pos={[-5.5, 1.3, -14.45]} />
-
       {/* CS room: crate stacks, as is tradition */}
       <Crate pos={[-4, 0.4, -27.5]} rotY={0.2} />
       <Crate pos={[-3.9, 1.2, -27.6]} size={0.75} rotY={0.6} />
-      <Crate pos={[-4.2, 0.4, -36.8]} rotY={0.4} />
-      <Crate pos={[4.2, 0.35, -33]} size={0.7} rotY={1.1} />
+      <Crate pos={[-4.2, 0.4, -32]} rotY={0.4} />
+      <Crate pos={[4.2, 0.35, -29.5]} size={0.7} rotY={1.1} />
       <CeilPanel pos={[0, 3.98, -31]} w={2.2} d={0.7} color="#ffe9c9" />
     </group>
   );

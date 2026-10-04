@@ -69,7 +69,11 @@ export function SkinEconomy() {
   }
 
   return (
-    <div className="skin-shop">
+    <div
+      className="skin-shop"
+      onClick={(e) => e.stopPropagation()} // keep clicks from reaching the
+      // document-level pointer-lock listener ("click to enter")
+    >
       <p className="char-label">
         {sol.toFixed(1)} SOL
         <button className="airdrop-btn" onClick={() => airdrop()}>

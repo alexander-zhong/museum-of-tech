@@ -72,7 +72,7 @@ export const useStore = create<MuseumState>()((set) => ({
   subtitle: null,
   mode: "walk",
   view: "first",
-  weapon: "pistol",
+  weapon: "rifle",
   character: "gold",
   sol: 10,
   ownedSkins: [],
@@ -101,6 +101,6 @@ export const useStore = create<MuseumState>()((set) => ({
 }));
 
 // dev console access for debugging
-if (import.meta.env.DEV) {
+if (typeof import.meta.env !== "undefined" && import.meta.env.DEV) {
   (window as unknown as Record<string, unknown>).__store = useStore;
 }

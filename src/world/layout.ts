@@ -70,15 +70,14 @@ export const ARENA_COVER: CoverBlock[] = [
 
 // Walk-in teleporters: museum CS room <-> arena.
 export const PORTALS = [
-  { x: -4.3, z: -32, r: 1.1, tx: 90, tz: -16 }, // CS room -> arena
-  { x: 90, z: -11.5, r: 1.1, tx: -2.6, tz: -32 }, // arena -> museum
+  { x: 4.3, z: -32, r: 1.1, tx: 90, tz: -16 }, // CS room -> arena
+  { x: 90, z: -11.5, r: 1.1, tx: 2.6, tz: -32 }, // arena -> museum
 ];
 
 const R = 0.4; // player radius
 
-// Non-wall obstacles (pedestal, columns, exhibits, set dressing).
+// Non-wall obstacles (columns, exhibits, set dressing).
 const OBSTACLES: Wall[] = [
-  { x: 0, z: -1, w: 1.5, d: 1.5 }, // hologram pedestal
   { x: 2.6, z: -2.2, w: 1.1, d: 0.9 }, // Sparky
   // entry columns
   { x: -4, z: -3.3, w: 0.8, d: 0.8 },
@@ -90,16 +89,16 @@ const OBSTACLES: Wall[] = [
   { x: 12.3, z: -9.5, w: 1.0, d: 4.3 }, // Bombe cabinet
   { x: -12.15, z: -20.5, w: 1.2, d: 4.3 }, // Pong cabinet
   { x: 12.3, z: -20.5, w: 1.0, d: 4.3 }, // AGC console
-  // ENIAC relay panels
-  { x: -8, z: -4.6, w: 1.7, d: 0.5 },
-  { x: -5.5, z: -4.6, w: 1.7, d: 0.5 },
-  { x: -8, z: -14.4, w: 1.7, d: 0.5 },
-  { x: -5.5, z: -14.4, w: 1.7, d: 0.5 },
+  // Educational display plinths
+  { x: -8.5, z: -14.05, w: 2.1, d: 1.7 },
+  { x: 8.5, z: -4.95, w: 2.1, d: 1.7 },
+  { x: -8.5, z: -25.05, w: 2.1, d: 1.7 },
+  { x: 8.5, z: -15.95, w: 2.1, d: 1.7 },
   // CS room: bench + crates
   { x: 1.8, z: -28.2, w: 1.7, d: 0.7 },
   { x: -4, z: -27.5, w: 1.0, d: 1.0 },
-  { x: -4.2, z: -36.8, w: 1.0, d: 1.0 },
-  { x: 4.2, z: -33, w: 0.9, d: 0.9 },
+  { x: -4.2, z: -32, w: 1.0, d: 1.0 },
+  { x: 4.2, z: -29.5, w: 0.9, d: 0.9 },
 ];
 const SOLIDS = [...WALLS, ...OBSTACLES, ...ARENA_WALLS, ...ARENA_COVER];
 
@@ -150,7 +149,7 @@ interface RoomDef {
 }
 
 export const ROOMS: RoomDef[] = [
-  { id: "entry", title: "MUSEUM OF DEAD TECH", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
+  { id: "entry", title: "OTTER ORIGINS", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
   { id: "eniac", title: "01 · TRANSISTOR · 1947", minX: -13, maxX: -3, minZ: -15, maxZ: -4 },
   { id: "bombe", title: "02 · INTEGRATED CIRCUIT · 1958–1971", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
   { id: "pong", title: "03 · COMPILER · 1952 ONWARD", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },

@@ -6,7 +6,7 @@ import { useStore } from "../store";
 // otherwise subtitles alone carry the joke.
 export const LINES: Record<string, string> = {
   intro:
-    "Welcome to the Museum of Dead Tech. WASD to walk. Touch everything. Break nothing. Let's go.",
+    "Welcome to the Otter Origins. WASD to walk. Touch everything. Break nothing. Let's go.",
   "entry-corridor":
     "Everything in here used to be the coolest thing on the planet. It won't last. It never does.",
   "entry-eniac":

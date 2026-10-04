@@ -1,7 +1,7 @@
 import { useStore } from "../store";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
-import { CHARACTERS } from "../world/Mascots";
+import { CHARACTERS, nameFor, swatchFor } from "../world/Mascots";
 import { initWallet } from "../systems/wallet";
 import { session } from "../systems/feel";
 import { useEffect } from "react";
@@ -76,11 +76,10 @@ export function Hud() {
       {!locked && !started && (
         <div className="start-screen">
           <div className="start-inner">
-            <p className="start-kicker">STORMHACKS 2026 PRESENTS</p>
             <h1 className="start-title">
-              MUSEUM OF
+              OTTER
               <br />
-              <span className="accent">DEAD TECH</span>
+              <span className="accent">ORIGINS</span>
             </h1>
             <p className="start-tag">
               Recreate the breakthroughs that built your computer.
@@ -108,7 +107,15 @@ export function Hud() {
                 ))}
               </div>
               <p className="char-note">press V in-game to see yourself</p>
-              <SkinEconomy />
+              <button
+                className="pause-btn main-shop-btn"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  set({ econMenu: true });
+                }}
+              >
+                SHOP
+              </button>
             </div>
             <p className="start-cta">CLICK TO ENTER</p>
             <p className="start-controls">
@@ -176,6 +183,14 @@ export function Hud() {
           )}
           {prompt && <div className="prompt">{prompt}</div>}
           {roomTitle && <div className="room-title">{roomTitle}</div>}
+          <div className="skin-chip">
+            <span
+              className="skin-chip-swatch"
+              style={{ background: swatchFor(character) }}
+            />
+            {nameFor(character)}
+            <span className="skin-chip-hint"> · V to view · M market</span>
+          </div>
           {armed && (
             <div className="weapon-label">
               {weaponById(weapon).name}
@@ -206,8 +221,8 @@ export function Hud() {
         </>
       )}
 
-      {started && econMenu && (
-        <div className="econ-overlay">
+      {econMenu && (
+        <div className="econ-overlay" onClick={(e) => e.stopPropagation()}>
           <div className="econ-panel">
             <div className="econ-head">
               <span>OTTER MARKET</span>
@@ -215,10 +230,10 @@ export function Hud() {
                 className="econ-small"
                 onClick={() => {
                   set({ econMenu: false });
-                  session.lock();
+                  if (started) session.lock();
                 }}
               >
-                CLOSE (M)
+                CLOSE
               </button>
             </div>
             <SkinEconomy />

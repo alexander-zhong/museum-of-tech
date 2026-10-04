@@ -125,6 +125,7 @@ export function PlayerController() {
           yaw: Math.atan2(dir.x, dir.z),
           char: s.character,
           mv: feel.avatarMoving,
+          w: s.weapon,
           hp: s.dead ? 0 : s.hp,
           ...(s.dead && s.knock ? { ko: s.knock } : {}),
         });
