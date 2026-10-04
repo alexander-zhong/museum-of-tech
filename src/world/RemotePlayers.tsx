@@ -3,6 +3,11 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { peers, shotQueue, type NetState } from "../systems/net";
 import { MAX_HP } from "../systems/combat";
+import {
+  HIP_PIVOT,
+  ragdollPose,
+  ragdollSeed,
+} from "../systems/ragdoll";
 import { OtterRig, hueFor, CHARACTERS } from "./Mascots";
 
 const STALE_MS = 6000; // drop peers that stop talking
@@ -26,13 +31,20 @@ function barColor(frac: number): number {
 
 function RemoteOtter({ id }: { id: string }) {
   const group = useRef<THREE.Group>(null);
-  const body = useRef<THREE.Group>(null); // everything that hides while they're down
+  const flop = useRef<THREE.Group>(null); // ragdoll pivot at hip height
+  const hud = useRef<THREE.Group>(null); // name tag + health bar
   const hitboxes = useRef<(THREE.Mesh | null)[]>([]);
   const fill = useRef<THREE.Sprite>(null);
   const moving = useRef(false);
   const speed = useRef(0);
   const [char, setChar] = useState("gold");
   const last = useRef(new THREE.Vector3());
+  // ragdoll bookkeeping: a body stays where it fell, not where they respawn
+  const deathAt = useRef(0);
+  const deathPos = useRef(new THREE.Vector3());
+  const deathYaw = useRef(0);
+  const snapUntil = useRef(0); // just-respawned: teleport, never glide
+  const seed = useMemo(() => ragdollSeed(id), [id]);
 
   useFrame((_, dt) => {
     const entry = peers.get(id);
@@ -40,22 +52,61 @@ function RemoteOtter({ id }: { id: string }) {
     if (!entry || !g) return;
     const s: NetState = entry.state;
     const target = new THREE.Vector3(s.p[0], s.p[1] - EYE, s.p[2]);
-    // smooth toward the latest network position
-    g.position.lerp(target, Math.min(1, dt * 12));
-    const yawDiff =
-      ((s.yaw - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-    g.rotation.y += yawDiff * Math.min(1, dt * 12);
-    speed.current = g.position.distanceTo(last.current) / Math.max(dt, 1e-4);
-    last.current.copy(g.position);
-    moving.current = s.mv || speed.current > 0.5;
-    if (s.char !== char) setChar(s.char);
-
-    // down players disappear until they respawn — and stop catching bullets.
-    // Raycasting ignores `visible`, so park the hitboxes on an unused layer.
     const hp = s.hp ?? MAX_HP;
     const alive = hp > 0;
-    if (body.current) body.current.visible = alive;
+    const now = performance.now();
+
+    if (!alive && deathAt.current === 0) {
+      // they just went down: pin the body where it fell and start the flop
+      deathAt.current = now;
+      deathPos.current.copy(g.position);
+      deathYaw.current = g.rotation.y;
+    } else if (alive && deathAt.current !== 0) {
+      // respawned somewhere else — snap, don't glide across the museum
+      deathAt.current = 0;
+      // their respawn position may be a packet behind, so snap for a moment
+      // instead of sliding the body across the museum to meet it
+      snapUntil.current = now + 400;
+      g.position.copy(target);
+      if (flop.current) {
+        flop.current.rotation.set(0, 0, 0);
+        flop.current.visible = true;
+      }
+    }
+
+    if (deathAt.current === 0) {
+      // smooth toward the latest network position
+      if (now < snapUntil.current) g.position.copy(target);
+      else g.position.lerp(target, Math.min(1, dt * 12));
+      const yawDiff =
+        ((s.yaw - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      g.rotation.y += yawDiff * Math.min(1, dt * 12);
+      speed.current = g.position.distanceTo(last.current) / Math.max(dt, 1e-4);
+      last.current.copy(g.position);
+      moving.current = s.mv || speed.current > 0.5;
+    } else {
+      const pose = ragdollPose(now - deathAt.current, seed);
+      g.position.set(
+        deathPos.current.x + pose.dx,
+        deathPos.current.y + pose.y,
+        deathPos.current.z + pose.dz,
+      );
+      g.rotation.y = deathYaw.current + pose.spin;
+      moving.current = false;
+      speed.current = 0;
+      last.current.copy(g.position);
+      if (flop.current) {
+        flop.current.rotation.x = pose.pitch;
+        flop.current.rotation.z = pose.roll;
+        flop.current.visible = !pose.gone;
+      }
+    }
+    if (s.char !== char) setChar(s.char);
+
+    // the dead stop catching bullets — and raycasting ignores `visible`,
+    // so park the hitboxes on an unused layer rather than just hiding them
     hitboxes.current.forEach((m) => m?.layers.set(alive ? 0 : 1));
+    if (hud.current) hud.current.visible = alive;
     const frac = Math.max(0, Math.min(1, hp / MAX_HP));
     if (fill.current) {
       fill.current.scale.set(BAR_W * frac, BAR_H, 1);
@@ -68,36 +119,40 @@ function RemoteOtter({ id }: { id: string }) {
 
   return (
     <group ref={group}>
-      <group ref={body}>
-        <Suspense fallback={null}>
-          <OtterRig
-            hue={hueFor(char)}
-            getMoving={() => moving.current}
-            getSpeed={() => speed.current}
-          />
-        </Suspense>
-        {/* bullet hitboxes: invisible, but the only thing shots collide with */}
-        <mesh
-          position={[0, BODY_Y, 0]}
-          userData={{ peerId: id, zone: "body" }}
-          ref={(m) => {
-            hitboxes.current[0] = m;
-          }}
-        >
-          <boxGeometry args={BODY} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-        <mesh
-          position={[0, HEAD_CENTER_Y, 0]}
-          userData={{ peerId: id, zone: "head" }}
-          ref={(m) => {
-            hitboxes.current[1] = m;
-          }}
-        >
-          <boxGeometry args={HEAD} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-        {/* health bar + name tag */}
+      <group ref={flop} position={[0, HIP_PIVOT, 0]}>
+        <group position={[0, -HIP_PIVOT, 0]}>
+          <Suspense fallback={null}>
+            <OtterRig
+              hue={hueFor(char)}
+              getMoving={() => moving.current}
+              getSpeed={() => speed.current}
+            />
+          </Suspense>
+        </group>
+      </group>
+      {/* bullet hitboxes: invisible, but the only thing shots collide with */}
+      <mesh
+        position={[0, BODY_Y, 0]}
+        userData={{ peerId: id, zone: "body" }}
+        ref={(m) => {
+          hitboxes.current[0] = m;
+        }}
+      >
+        <boxGeometry args={BODY} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <mesh
+        position={[0, HEAD_CENTER_Y, 0]}
+        userData={{ peerId: id, zone: "head" }}
+        ref={(m) => {
+          hitboxes.current[1] = m;
+        }}
+      >
+        <boxGeometry args={HEAD} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {/* health bar + name tag: live players only */}
+      <group ref={hud}>
         <sprite
           position={[0, 1.88, 0]}
           scale={[BAR_W, BAR_H, 1]}

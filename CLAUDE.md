@@ -22,6 +22,7 @@ Vite + React + TypeScript, React Three Fiber + drei, Zustand. No backend; static
 - `src/systems/sfx.ts` — synthesized WebAudio SFX (gunshot, hit, hurt, death, ding, footsteps); no audio assets.
 - `src/systems/net.ts` — Trystero P2P transport only (state/shot/hit/frag actions + a handler bag).
 - `src/systems/combat.ts` — PvP damage. Shooter detects the hit and sends it; the victim owns its own HP and broadcasts its own death (no server to referee). Health, kills/deaths, kill feed and respawn live here; `combatTick()` runs from PlayerController.
+- `src/systems/ragdoll.ts` — death flop as a timed pose curve (no physics engine), shared by remote corpses and your own third-person body so a death looks the same from every angle. Bodies pivot at hip height, lie where they fell, and sink out before the 3s respawn.
 - Remote players carry invisible body/head hitboxes (`userData.peerId` + `zone`) in `RemotePlayers.tsx` — raycasting ignores `visible`, so dead peers' hitboxes are parked on layer 1.
 - CsRange: Counter-Strike / Minh Le (SFU, 1999) shooting range at the end of the corridor. Everyone spawns armed, left-click shoots via center raycast, 6 otter range bots that faceplant when hit, timed rounds with best time. Shooting is active while pointer locked + walk mode + alive.
 - `src/ui/Hud.tsx` + `src/index.css` — DOM overlay, StormHacks branding (navy #101a21, orange #fc7900, blue #0278ff).
