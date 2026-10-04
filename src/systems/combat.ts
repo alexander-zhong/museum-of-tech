@@ -22,9 +22,18 @@ const RESPAWN_MS = 3000;
 const FEED_MS = 7000;
 const FEED_MAX = 5;
 
-// Arena respawn points, spread so you don't come back on top of your killer.
-// (Deaths only happen in the arena; the museum is a safe lobby.)
-const SPAWNS: [number, number][] = [
+// Respawn points, spread so you don't come back on top of your killer.
+// You respawn in the region you died in.
+const MUSEUM_SPAWNS: [number, number][] = [
+  [0, 0.5],
+  [-7, 0],
+  [7, 0],
+  [0, -12],
+  [0, -22],
+  [-3.5, -29],
+  [3.5, -29],
+];
+const ARENA_SPAWNS: [number, number][] = [
   [73, -13],
   [107, -13],
   [73, -47],
@@ -86,10 +95,6 @@ export function damagePlayer(
 ) {
   const victim = peers.get(peerId);
   if (!victim || victim.state.hp <= 0) return;
-  // PvP only inside the arena. The victim re-checks its own room in onHit,
-  // so the shooter only gates on itself (a laggy position packet shouldn't
-  // eat a legitimate hit).
-  if (useStore.getState().room !== "dm") return;
   const def = weaponById(weaponId);
   const dmg = Math.max(
     1,
@@ -143,8 +148,10 @@ function die(killer: string, hit: NetHit) {
 }
 
 function pickSpawn(): [number, number] {
-  const open = SPAWNS.filter(([x, z]) => !pointBlocked(x, z));
-  const pool = open.length ? open : SPAWNS;
+  const region =
+    useStore.getState().room === "dm" ? ARENA_SPAWNS : MUSEUM_SPAWNS;
+  const open = region.filter(([x, z]) => !pointBlocked(x, z));
+  const pool = open.length ? open : region;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -196,7 +203,6 @@ netHandlers.onHit = (from, hit) => {
   // is still standing in the world — and still shootable. Only the main menu
   // (never entered / left the game) is out of play.
   if (!s.started || s.dead || s.hp <= 0) return;
-  if (s.room !== "dm") return; // the museum lobby is a no-damage zone
   const hp = Math.max(0, s.hp - Math.max(0, Math.min(500, hit.d)));
   if (hp > 0) {
     s.set({ hp, hurtAt: performance.now() });
@@ -224,3 +230,8 @@ netHandlers.onFrag = (victim, frag) => {
   sfxKill();
   if (firstBlood) say("pvp-first-kill");
 };
+
+// dev console access for debugging
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__combat = { damagePlayer };
+}

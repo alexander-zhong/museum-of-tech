@@ -82,13 +82,6 @@ export function PlayerController() {
         const s = useStore.getState();
         s.set({ view: s.view === "first" ? "third" : "first" });
       }
-      if (e.code === "KeyP") {
-        // quick travel: hop between museum and arena (same as the portals)
-        const s = useStore.getState();
-        if (!s.locked || s.dead) return;
-        if (s.room === "dm") session.teleport(-2.6, -32);
-        else session.teleport(90, -16);
-      }
     };
     const unsubscribeLesson = useStore.subscribe((state, previous) => {
       if (state.lesson !== previous.lesson) keys.current = {};
