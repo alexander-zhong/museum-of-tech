@@ -2,6 +2,9 @@
 // decayed and applied by the PlayerController each frame.
 export const feel = {
   fovKick: 0,
+  // fed by PlayerController each frame; read by the third-person avatar
+  avatarMoving: false,
+  avatarSpeed: 0,
 };
 
 export function addFovKick(amount: number) {

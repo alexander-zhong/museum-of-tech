@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { SparkyAvatar } from "../world/Mascots";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -159,6 +160,8 @@ export function PlayerController() {
       head.current.y = smoothY.current;
 
       if (moving) lastMove.current = now;
+      feel.avatarMoving = moving;
+      feel.avatarSpeed = hSpeed;
 
       // speedometer (imperative DOM — avoids re-rendering React every frame)
       speedoTimer.current += d;
@@ -285,26 +288,11 @@ export function PlayerController() {
           useStore.getState().set({ locked: false, mode: "walk", prompt: null })
         }
       />
-      {/* third-person avatar: low-poly museum visitor */}
+      {/* third-person avatar: you are Sparky */}
       <group ref={avatar} visible={false}>
-        <mesh position={[0, 0.78, 0]} raycast={() => null}>
-          <capsuleGeometry args={[0.24, 0.8, 4, 10]} />
-          <meshStandardMaterial color="#1e2430" roughness={0.6} metalness={0.3} />
-        </mesh>
-        <mesh position={[0, 1.52, 0]} raycast={() => null}>
-          <sphereGeometry args={[0.17, 14, 14]} />
-          <meshStandardMaterial color="#232a38" roughness={0.5} />
-        </mesh>
-        {/* visor */}
-        <mesh position={[0, 1.54, 0.13]} raycast={() => null}>
-          <boxGeometry args={[0.2, 0.06, 0.1]} />
-          <meshBasicMaterial color="#fc7900" toneMapped={false} />
-        </mesh>
-        {/* backpack */}
-        <mesh position={[0, 0.95, -0.24]} raycast={() => null}>
-          <boxGeometry args={[0.3, 0.42, 0.14]} />
-          <meshStandardMaterial color="#182028" roughness={0.8} />
-        </mesh>
+        <Suspense fallback={null}>
+          <SparkyAvatar />
+        </Suspense>
       </group>
     </>
   );
