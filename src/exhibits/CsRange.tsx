@@ -25,13 +25,35 @@ const FLASH_Z: Record<string, number> = {
 const RIFLE_SCALE = 0.002; // ~0.62 m long
 const RIFLE_OFFSET: [number, number, number] = [0, -0.108, 0.273];
 
+// The pack's own palette is near-greyscale, which reads as a grey blob under
+// museum lighting. Warm the wood and lift the metals so the gun has parts you
+// can tell apart. Delete this map to get the asset's raw colours back.
+const RIFLE_PALETTE: Record<string, string> = {
+  Wood: "#8a5a30",
+  DarkWood: "#6d4425",
+  Metal: "#70747a",
+  DarkMetal: "#4b4f55",
+  Black: "#2a2b2e",
+};
+
 function RifleModel() {
   const { scene } = useGLTF("/models/AssaultRifle_1.glb");
   const model = useMemo(() => {
     const clone = scene.clone(true);
-    // a viewmodel rides on the camera — it must never catch our own bullets
     clone.traverse((o) => {
+      // a viewmodel rides on the camera — it must never catch our own bullets
       o.raycast = () => {};
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      // clone() shares materials with the cached glTF, so copy before tinting
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const tinted = mats.map((m) => {
+        const std = (m as THREE.MeshStandardMaterial).clone();
+        const hex = RIFLE_PALETTE[std.name];
+        if (hex) std.color.set(hex);
+        return std;
+      });
+      mesh.material = Array.isArray(mesh.material) ? tinted : tinted[0];
     });
     return clone;
   }, [scene]);
@@ -576,6 +598,17 @@ export function CsRange() {
 
       {/* ---- gun viewmodel (follows camera, shape per weapon) ---- */}
       <group ref={gun} visible={false}>
+        {/* Travels with the gun. The museum is deliberately dim and the
+            viewmodel is inches from the camera, so without its own key light
+            it reads as a silhouette in half the building. Short range so it
+            lights the weapon and not the room. */}
+        <pointLight
+          position={[0.12, 0.3, 0.12]}
+          color="#ffe6c4"
+          intensity={1.6}
+          distance={1.1}
+          decay={2}
+        />
         {weaponId === "knife" && (
           <>
             <mesh position={[0, 0, -0.08]} rotation={[0.15, 0, 0]} raycast={() => null}>
