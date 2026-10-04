@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
 
-const HOLD_MS = 6000;
+const HOLD_MS = 3000;
 const VIDEO_ID = "ZjPB3a2t1vk";
 
 // Hold Space for six seconds; releasing it stops playback and resets the timer.
