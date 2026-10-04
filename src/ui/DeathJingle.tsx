@@ -25,6 +25,7 @@ export function DeathJingle() {
   const lastBot = useRef(0);
 
   const spawn = () => {
+    if (useStore.getState().cinema) return; // movie mode: keep the mix clean
     const slot = next.current % POOL;
     next.current += 1;
     const frame = frames.current[slot];
