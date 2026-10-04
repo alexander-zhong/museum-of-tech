@@ -207,7 +207,7 @@ export function Hud() {
       )}
 
       {started && econMenu && (
-        <div className="econ-overlay">
+        <div className="econ-overlay" onClick={(e) => e.stopPropagation()}>
           <div className="econ-panel">
             <div className="econ-head">
               <span>OTTER MARKET</span>
