@@ -36,6 +36,8 @@ interface MuseumState {
   // demo-Solana skin economy
   sol: number;
   ownedSkins: string[];
+  inv: Record<string, number>;
+  marketAt: number; // bumped when marketplace listings change
   walletMsg: string | null;
   walletMsgAt: number;
   walletMode: "demo" | "devnet";
@@ -73,6 +75,8 @@ export const useStore = create<MuseumState>()((set) => ({
   character: "gold",
   sol: 10,
   ownedSkins: [],
+  inv: {},
+  marketAt: 0,
   walletMsg: null,
   walletMsgAt: 0,
   walletMode: "demo",

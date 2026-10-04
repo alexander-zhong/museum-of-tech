@@ -48,13 +48,58 @@ export const CHARACTERS = [
 
 // Premium skins: tradeable cosmetics (demo-Solana wallet in systems/wallet.ts).
 // `filter` is a full canvas filter string applied to the otter texture.
-export const SKINS = [
-  { id: "midas", name: "MIDAS", filter: "sepia(1) saturate(3) brightness(1.15)", swatch: "#ffd700", price: 3 },
-  { id: "void", name: "VOID", filter: "invert(1)", swatch: "#16213e", price: 5 },
-  { id: "frost", name: "FROST", filter: "saturate(0.35) brightness(1.35) hue-rotate(165deg)", swatch: "#bfe6ff", price: 2 },
-  { id: "toxic", name: "TOXIC", filter: "hue-rotate(55deg) saturate(2.6) brightness(1.1)", swatch: "#7CFC00", price: 2 },
-  { id: "cherry", name: "CHERRY", filter: "hue-rotate(305deg) saturate(1.9)", swatch: "#ff4d6d", price: 1 },
+export type Rarity = "common" | "rare" | "epic" | "legendary";
+
+export const RARITY_COLOR: Record<Rarity, string> = {
+  common: "#9ca3af",
+  rare: "#0278ff",
+  epic: "#b14cf0",
+  legendary: "#fc7900",
+};
+
+export const SKINS: {
+  id: string;
+  name: string;
+  filter: string;
+  swatch: string;
+  price: number;
+  rarity: Rarity;
+}[] = [
+  { id: "rust", name: "RUST", filter: "sepia(0.7) saturate(1.4) brightness(0.9)", swatch: "#a86a3d", price: 1, rarity: "common" },
+  { id: "slate", name: "SLATE", filter: "grayscale(1) brightness(0.95)", swatch: "#8d939e", price: 1, rarity: "common" },
+  { id: "cherry", name: "CHERRY", filter: "hue-rotate(305deg) saturate(1.9)", swatch: "#ff4d6d", price: 1, rarity: "common" },
+  { id: "toxic", name: "TOXIC", filter: "hue-rotate(55deg) saturate(2.6) brightness(1.1)", swatch: "#7CFC00", price: 1, rarity: "common" },
+  { id: "frost", name: "FROST", filter: "saturate(0.35) brightness(1.35) hue-rotate(165deg)", swatch: "#bfe6ff", price: 1, rarity: "common" },
+  { id: "ocean", name: "OCEAN", filter: "hue-rotate(190deg) saturate(2.2) brightness(0.95)", swatch: "#0e7490", price: 2, rarity: "rare" },
+  { id: "magma", name: "MAGMA", filter: "hue-rotate(335deg) saturate(2.8) brightness(0.85) contrast(1.2)", swatch: "#dc2626", price: 2, rarity: "rare" },
+  { id: "midas", name: "MIDAS", filter: "sepia(1) saturate(3) brightness(1.15)", swatch: "#ffd700", price: 3, rarity: "rare" },
+  { id: "void", name: "VOID", filter: "invert(1)", swatch: "#16213e", price: 5, rarity: "epic" },
+  { id: "ghost", name: "GHOST", filter: "grayscale(1) brightness(1.6) contrast(0.8)", swatch: "#e5e7eb", price: 5, rarity: "epic" },
+  { id: "glitch", name: "GLITCH", filter: "invert(1) hue-rotate(90deg) saturate(3)", swatch: "#00ffc8", price: 10, rarity: "legendary" },
 ];
+
+const ROLL_WEIGHT: Record<Rarity, number> = {
+  common: 60,
+  rare: 28,
+  epic: 9,
+  legendary: 3,
+};
+
+// Weighted case roll: picks a rarity bucket, then a skin inside it.
+export function rollSkin(): (typeof SKINS)[number] {
+  const total = Object.values(ROLL_WEIGHT).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  let tier: Rarity = "common";
+  for (const [k, w] of Object.entries(ROLL_WEIGHT) as [Rarity, number][]) {
+    if (r < w) {
+      tier = k;
+      break;
+    }
+    r -= w;
+  }
+  const pool = SKINS.filter((k) => k.rarity === tier);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 export function nameFor(id: string): string {
   return (
