@@ -11,6 +11,7 @@ import { sfxFootstep, startAmbient } from "../systems/sfx";
 import { feel, session } from "../systems/feel";
 import { weaponById } from "../systems/weapons";
 import { sendState } from "../systems/net";
+import { combatTick } from "../systems/combat";
 
 const SPEED = 4;
 const SPRINT = 6.2;
@@ -64,6 +65,15 @@ export function PlayerController() {
     const up = (e: KeyboardEvent) => {
       keys.current[e.code] = false;
     };
+    // combat uses this to drop us at a spawn point after we respawn
+    session.teleport = (x: number, z: number) => {
+      head.current.set(x, EYE, z);
+      smoothY.current = EYE;
+      vel.current.set(0, 0, 0);
+      vy.current = 0;
+      jumpY.current = 0;
+      camera.position.copy(head.current);
+    };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => {
@@ -76,8 +86,8 @@ export function PlayerController() {
     const state = useStore.getState();
     const d = Math.min(dt, 0.05);
 
-    // movement (frozen while playing Pong)
-    if (state.locked && state.mode === "walk") {
+    // movement (frozen while playing Pong or waiting to respawn)
+    if (state.locked && state.mode === "walk" && !state.dead) {
       const k = keys.current;
       const fwd = (k.KeyW ? 1 : 0) - (k.KeyS ? 1 : 0);
       const strafe = (k.KeyD ? 1 : 0) - (k.KeyA ? 1 : 0);
@@ -165,7 +175,21 @@ export function PlayerController() {
       feel.avatarMoving = moving;
       feel.avatarSpeed = hSpeed;
 
-      // multiplayer: broadcast position ~12x/s
+      // idle nag
+      if (now - lastMove.current > 20000) {
+        say("idle");
+        lastMove.current = now;
+      }
+    } else if (state.dead) {
+      // dead men don't slide: park the body until we respawn
+      vel.current.set(0, 0, 0);
+      vy.current = 0;
+      feel.avatarMoving = false;
+      feel.avatarSpeed = 0;
+    }
+
+    // multiplayer: broadcast ~12x/s, including while down so peers see us drop
+    if (state.locked) {
       netTimer.current += d;
       if (netTimer.current > 0.085) {
         netTimer.current = 0;
@@ -176,19 +200,17 @@ export function PlayerController() {
             p: [head.current.x, head.current.y, head.current.z],
             yaw: Math.atan2(fwdDir.x, fwdDir.z),
             char: state.character,
-            mv: moving,
+            mv: feel.avatarMoving,
+            hp: state.dead ? 0 : state.hp,
           });
         } catch {
           /* no peers yet */
         }
       }
-
-      // idle nag
-      if (now - lastMove.current > 20000) {
-        say("idle");
-        lastMove.current = now;
-      }
     }
+
+    // respawn timer + kill-feed expiry
+    combatTick();
 
     // camera placement: first person = at the head; third = boom behind, wall-clamped
     const third = state.view === "third";

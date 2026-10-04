@@ -8,6 +8,7 @@ import { sfxShoot, sfxHit, sfxDing } from "../systems/sfx";
 import { addFovKick, feel } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { sendShot } from "../systems/net";
+import { damagePlayer } from "../systems/combat";
 
 const FLASH_Z: Record<string, number> = {
   pistol: -0.2,
@@ -219,6 +220,7 @@ export function CsRange() {
     const tryFire = () => {
       const s = useStore.getState();
       if (!s.locked || s.mode !== "walk" || !equipped.current || s.buyMenu) return;
+      if (s.dead) return; // no shooting from the respawn queue
       const def = weaponById(s.weapon);
       const now = performance.now();
       if (now - lastFire.current < def.fireMs) return;
@@ -238,7 +240,7 @@ export function CsRange() {
       }
 
       raycaster.current.setFromCamera(new THREE.Vector2(0, 0), camera);
-      raycaster.current.far = def.knife ? 2.4 : 45;
+      raycaster.current.far = def.range;
       const hits = raycaster.current.intersectObjects(scene.children, true);
       const hit = hits[0];
 
@@ -272,6 +274,19 @@ export function CsRange() {
       const normal = hit.face
         ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
         : new THREE.Vector3(0, 1, 0);
+
+      // did we hit another player? their hitboxes carry the peer id
+      const victim = hit.object.userData.peerId as string | undefined;
+      if (victim) {
+        damagePlayer(
+          victim,
+          def.id,
+          hit.object.userData.zone === "head",
+          hit.distance,
+        );
+        spawnSparks(hit.point, normal, def.sparks);
+        return;
+      }
 
       // did we hit a target?
       let o: THREE.Object3D | null = hit.object;

@@ -19,7 +19,10 @@ Vite + React + TypeScript, React Three Fiber + drei, Zustand. No backend; static
 - `src/systems/interact.ts` — interactId -> handler/prompt registry.
 - `src/systems/narration.ts` — LINES script + say(id): subtitle + optional audio. Never interrupts; non-repeatable lines play once.
 - `src/exhibits/` — one file per exhibit (Pong, Eniac, Agc, Bombe, CsRange), self-contained, registered via registerInteract in useEffect.
-- `src/systems/sfx.ts` — synthesized WebAudio SFX (gunshot, hit, ding, footsteps); no audio assets.
+- `src/systems/sfx.ts` — synthesized WebAudio SFX (gunshot, hit, hurt, death, ding, footsteps); no audio assets.
+- `src/systems/net.ts` — Trystero P2P transport only (state/shot/hit/frag actions + a handler bag).
+- `src/systems/combat.ts` — PvP damage. Shooter detects the hit and sends it; the victim owns its own HP and broadcasts its own death (no server to referee). Health, kills/deaths, kill feed and respawn live here; `combatTick()` runs from PlayerController.
+- Remote players carry invisible body/head hitboxes (`userData.peerId` + `zone`) in `RemotePlayers.tsx` — raycasting ignores `visible`, so dead peers' hitboxes are parked on layer 1.
 - CsRange: Counter-Strike / Minh Le (SFU, 1999) shooting range at the end of the corridor. Pick up gun (E), left-click shoots via center raycast, 6 flip-down targets, timed rounds with best time. Shooting only active while equipped + pointer locked + walk mode.
 - `src/ui/Hud.tsx` + `src/index.css` — DOM overlay, StormHacks branding (navy #101a21, orange #fc7900, blue #0278ff).
 

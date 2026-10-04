@@ -152,3 +152,81 @@ export function sfxFootstep() {
   src.connect(f).connect(g).connect(a.destination);
   src.start(t);
 }
+
+// --- PvP feedback ---
+
+// Taking a bullet: wet thud plus a short filtered noise slap.
+export function sfxHurt() {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator();
+  o.type = "sine";
+  o.frequency.setValueAtTime(220, t);
+  o.frequency.exponentialRampToValueAtTime(70, t + 0.16);
+  const g = a.createGain();
+  env(g, t, 0.35, 0.2);
+  o.connect(g).connect(a.destination);
+  o.start(t);
+  o.stop(t + 0.24);
+
+  const src = a.createBufferSource();
+  src.buffer = noiseBuffer(a, 0.1);
+  const f = a.createBiquadFilter();
+  f.type = "bandpass";
+  f.frequency.value = 900;
+  f.Q.value = 1.2;
+  const ng = a.createGain();
+  env(ng, t, 0.2, 0.1);
+  src.connect(f).connect(ng).connect(a.destination);
+  src.start(t);
+}
+
+// Your own death: the lights go out, in audio form.
+export function sfxDeath() {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator();
+  o.type = "triangle";
+  o.frequency.setValueAtTime(420, t);
+  o.frequency.exponentialRampToValueAtTime(55, t + 0.9);
+  const g = a.createGain();
+  env(g, t, 0.3, 1.0);
+  o.connect(g).connect(a.destination);
+  o.start(t);
+  o.stop(t + 1.1);
+}
+
+// You eliminated someone: the little dopamine chirp.
+export function sfxKill() {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  [1180, 1570].forEach((freq, i) => {
+    const o = a.createOscillator();
+    o.type = "square";
+    o.frequency.value = freq;
+    const g = a.createGain();
+    env(g, t + i * 0.07, 0.12, 0.14);
+    o.connect(g).connect(a.destination);
+    o.start(t + i * 0.07);
+    o.stop(t + i * 0.07 + 0.18);
+  });
+}
+
+// Headshot: the hitmarker tick, pitched up and doubled.
+export function sfxHeadshot() {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator();
+  o.type = "square";
+  o.frequency.setValueAtTime(1500, t);
+  o.frequency.exponentialRampToValueAtTime(2300, t + 0.07);
+  const g = a.createGain();
+  env(g, t, 0.16, 0.13);
+  o.connect(g).connect(a.destination);
+  o.start(t);
+  o.stop(t + 0.16);
+}
