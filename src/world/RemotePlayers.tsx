@@ -2,13 +2,33 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { peers, shotQueue, type NetState } from "../systems/net";
+import { MAX_HP } from "../systems/combat";
 import { OtterRig, hueFor, CHARACTERS } from "./Mascots";
 
 const STALE_MS = 6000; // drop peers that stop talking
 const EYE = 1.6;
 
+// Hitboxes, sized to the otter model (feet at y=0, head tops out ~1.7).
+// They are invisible but do raycast — this is what bullets actually hit.
+const BODY: [number, number, number] = [0.75, 1.15, 0.75];
+const BODY_Y = 0.575;
+const HEAD: [number, number, number] = [0.5, 0.55, 0.5];
+const HEAD_CENTER_Y = 1.42;
+
+const BAR_W = 0.8;
+const BAR_H = 0.07;
+
+function barColor(frac: number): number {
+  if (frac > 0.6) return 0x52b86a;
+  if (frac > 0.3) return 0xfc7900;
+  return 0xd13a3a;
+}
+
 function RemoteOtter({ id }: { id: string }) {
   const group = useRef<THREE.Group>(null);
+  const body = useRef<THREE.Group>(null); // everything that hides while they're down
+  const hitboxes = useRef<(THREE.Mesh | null)[]>([]);
+  const fill = useRef<THREE.Sprite>(null);
   const moving = useRef(false);
   const speed = useRef(0);
   const [char, setChar] = useState("gold");
@@ -29,19 +49,67 @@ function RemoteOtter({ id }: { id: string }) {
     last.current.copy(g.position);
     moving.current = s.mv || speed.current > 0.5;
     if (s.char !== char) setChar(s.char);
+
+    // down players disappear until they respawn — and stop catching bullets.
+    // Raycasting ignores `visible`, so park the hitboxes on an unused layer.
+    const hp = s.hp ?? MAX_HP;
+    const alive = hp > 0;
+    if (body.current) body.current.visible = alive;
+    hitboxes.current.forEach((m) => m?.layers.set(alive ? 0 : 1));
+    const frac = Math.max(0, Math.min(1, hp / MAX_HP));
+    if (fill.current) {
+      fill.current.scale.set(BAR_W * frac, BAR_H, 1);
+      fill.current.position.x = -(BAR_W * (1 - frac)) / 2;
+      (fill.current.material as THREE.SpriteMaterial).color.setHex(
+        barColor(frac),
+      );
+    }
   });
 
   return (
     <group ref={group}>
-      <Suspense fallback={null}>
-        <OtterRig
-          hue={hueFor(char)}
-          getMoving={() => moving.current}
-          getSpeed={() => speed.current}
-        />
-      </Suspense>
-      {/* name tag */}
-      <NameTag char={char} />
+      <group ref={body}>
+        <Suspense fallback={null}>
+          <OtterRig
+            hue={hueFor(char)}
+            getMoving={() => moving.current}
+            getSpeed={() => speed.current}
+          />
+        </Suspense>
+        {/* bullet hitboxes: invisible, but the only thing shots collide with */}
+        <mesh
+          position={[0, BODY_Y, 0]}
+          userData={{ peerId: id, zone: "body" }}
+          ref={(m) => {
+            hitboxes.current[0] = m;
+          }}
+        >
+          <boxGeometry args={BODY} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+        <mesh
+          position={[0, HEAD_CENTER_Y, 0]}
+          userData={{ peerId: id, zone: "head" }}
+          ref={(m) => {
+            hitboxes.current[1] = m;
+          }}
+        >
+          <boxGeometry args={HEAD} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+        {/* health bar + name tag */}
+        <sprite
+          position={[0, 1.88, 0]}
+          scale={[BAR_W, BAR_H, 1]}
+          raycast={() => undefined}
+        >
+          <spriteMaterial color="#101a21" opacity={0.75} transparent depthWrite={false} />
+        </sprite>
+        <sprite ref={fill} position={[0, 1.88, 0]} raycast={() => undefined}>
+          <spriteMaterial color="#52b86a" depthWrite={false} />
+        </sprite>
+        <NameTag char={char} />
+      </group>
     </group>
   );
 }

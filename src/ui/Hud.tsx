@@ -1,6 +1,7 @@
 import { useStore } from "../store";
 import { session } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
+import { MAX_HP, resetCombat } from "../systems/combat";
 import { CHARACTERS } from "../world/Mascots";
 import { BhopMusic } from "./BhopMusic";
 
@@ -16,8 +17,20 @@ export function Hud() {
     weapon,
     armed,
     character,
+    hp,
+    dead,
+    respawnIn,
+    kills,
+    deaths,
+    hurtAt,
+    killAt,
+    killName,
+    deathBy,
+    feed,
     set,
   } = useStore();
+
+  const hpFrac = Math.max(0, Math.min(1, hp / MAX_HP));
 
   return (
     <div className="hud">
@@ -34,7 +47,10 @@ export function Hud() {
               </button>
               <button
                 className="pause-btn"
-                onClick={() => set({ started: false })}
+                onClick={() => {
+                  resetCombat();
+                  set({ started: false });
+                }}
               >
                 YES, MAIN MENU
               </button>
@@ -89,7 +105,54 @@ export function Hud() {
 
       {locked && (
         <>
-          <div className="crosshair" />
+          {!dead && <div className="crosshair" />}
+          {hurtAt > 0 && <div key={hurtAt} className="hurt-flash" />}
+          <div className="vitals">
+            <div className="hp-row">
+              <span className="hp-num">{hp}</span>
+              <div className="hp-track">
+                <div
+                  className={`hp-fill${hpFrac <= 0.3 ? " low" : ""}`}
+                  style={{ width: `${hpFrac * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="kd">
+              <span className="kd-k">{kills}</span> K
+              <span className="kd-sep">/</span>
+              <span className="kd-d">{deaths}</span> D
+            </div>
+          </div>
+          {feed.length > 0 && (
+            <div className="killfeed">
+              {feed.map((f) => (
+                <div key={f.n} className="killfeed-row">
+                  <span className="kf-killer">{f.killer}</span>
+                  <span className="kf-weapon">
+                    {weaponById(f.weapon).name}
+                    {f.hs ? " ⌖" : ""}
+                  </span>
+                  <span className="kf-victim">{f.victim}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {killAt > 0 && !dead && (
+            <div key={killAt} className="kill-banner">
+              ELIMINATED {killName}
+            </div>
+          )}
+          {dead && (
+            <div className="death-overlay">
+              <p className="death-title">YOU ARE A DEAD EXHIBIT</p>
+              {deathBy && (
+                <p className="death-by">
+                  retired by <span>{deathBy}</span>
+                </p>
+              )}
+              <p className="death-timer">RESPAWNING IN {respawnIn}</p>
+            </div>
+          )}
           {hitAt > 0 && (
             <div key={hitAt} className="hitmarker">
               <span /><span /><span /><span />

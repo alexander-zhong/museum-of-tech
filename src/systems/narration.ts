@@ -35,6 +35,10 @@ export const LINES: Record<string, string> = {
   "cs-clear": "All targets down. Minh Le would nod slightly. That's huge.",
   sparky:
     "That's Sparky. He's not an exhibit. He just lives here now. Do not feed him.",
+  "pvp-death":
+    "You died in a museum. Respawning, because history repeats itself.",
+  "pvp-first-kill":
+    "You shot another visitor. In 1999 that was a mod. Today it's a Tuesday.",
 };
 
 const played = new Set<string>();
@@ -48,6 +52,7 @@ const REPEATABLE = new Set([
   "bombe-done",
   "idle",
   "cs-clear",
+  "pvp-death",
 ]);
 
 let speaking = false;

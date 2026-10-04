@@ -8,9 +8,11 @@ export const feel = {
   avatarSpeed: 0,
 };
 
-// set by PlayerController; lets UI buttons re-enter pointer lock
+// set by PlayerController; lets UI buttons re-enter pointer lock and
+// lets the combat system move the player on respawn
 export const session = {
   lock: () => {},
+  teleport: (_x: number, _z: number) => {},
 };
 
 export function addFovKick(amount: number) {
