@@ -253,7 +253,7 @@ export function Decor() {
       {/* CS room: crate stacks, as is tradition */}
       <Crate pos={[-4, 0.4, -27.5]} rotY={0.2} />
       <Crate pos={[-3.9, 1.2, -27.6]} size={0.75} rotY={0.6} />
-      <Crate pos={[-4.2, 0.4, -36.8]} rotY={0.4} />
+      <Crate pos={[-4.2, 0.4, -32]} rotY={0.4} />
       <Crate pos={[4.2, 0.35, -29.5]} size={0.7} rotY={1.1} />
       <CeilPanel pos={[0, 3.98, -31]} w={2.2} d={0.7} color="#ffe9c9" />
     </group>

@@ -98,7 +98,7 @@ const OBSTACLES: Wall[] = [
   // CS room: bench + crates
   { x: 1.8, z: -28.2, w: 1.7, d: 0.7 },
   { x: -4, z: -27.5, w: 1.0, d: 1.0 },
-  { x: -4.2, z: -36.8, w: 1.0, d: 1.0 },
+  { x: -4.2, z: -32, w: 1.0, d: 1.0 },
   { x: 4.2, z: -29.5, w: 0.9, d: 0.9 },
 ];
 const SOLIDS = [...WALLS, ...OBSTACLES, ...ARENA_WALLS, ...ARENA_COVER];

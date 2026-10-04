@@ -543,7 +543,7 @@ canvas {
 .skin-chip {
   position: absolute;
   left: 28px;
-  bottom: 56px;
+  bottom: 96px;
   display: flex;
   align-items: center;
   gap: 8px;
