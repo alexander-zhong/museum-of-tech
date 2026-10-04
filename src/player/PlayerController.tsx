@@ -5,7 +5,7 @@ import { PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
 import { collide, pointBlocked, roomAt, roomTitle, PORTALS } from "../world/layout";
 import { useStore } from "../store";
-import { say, narrateRoom } from "../systems/narration";
+import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
 import { sfxFootstep, sfxThud, startAmbient } from "../systems/sfx";
 import { feel, session } from "../systems/feel";
@@ -382,7 +382,7 @@ export function PlayerController() {
           3000,
         );
       }
-      narrateRoom(room);
+      if (room && room !== "entry") say(["eniac", "bombe", "pong", "agc"].includes(room) ? `learn-${room}` : `entry-${room}`);
     }
 
     // crosshair raycast for interactables

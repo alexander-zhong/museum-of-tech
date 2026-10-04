@@ -41,7 +41,7 @@ useGLTF.preload("/models/sparky_walk.glb");
 // Playable otters — hue-rotations of Sparky's texture, matching the paintings.
 export const CHARACTERS = [
   { id: "gold", name: "SPARKY", hue: 0, swatch: "#e0a33c" },
-  { id: "blue", name: "STORMY", hue: 170, swatch: "#2f7dd1" },
+  { id: "blue", name: "SURGE", hue: 170, swatch: "#2f7dd1" },
   { id: "purple", name: "TRENDY", hue: 285, swatch: "#f472b6" },
   { id: "green", name: "SENDY", hue: 90, swatch: "#52b86a" },
 ];

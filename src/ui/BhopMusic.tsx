@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
 
-const HOLD_MS = 3000;
+const HOLD_MS = 6000;
 const VIDEO_ID = "ZjPB3a2t1vk";
 
-// Hold Space for three seconds; releasing it stops playback and resets the timer.
+// Hold Space for six seconds; releasing it stops playback and resets the timer.
 export function BhopMusic() {
   const [playing, setPlaying] = useState(false);
   const { locked, mode } = useStore();
