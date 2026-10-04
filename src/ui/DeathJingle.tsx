@@ -1,26 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useStore } from "../store";
 
 const VIDEO_ID = "yusP6sDpI20";
-const PLAY_MS = 6000; // each instance plays once, then unmounts
-const MAX_STACK = 10; // mercy cap on simultaneous instances
+const PLAY_MS = 6000; // each voice plays this long, then pauses
+const POOL = 3; // pre-mounted players; kills round-robin across them
 
-// Every elimination spawns its OWN player instance, so rapid kills
-// stack and overlap instead of restarting one clip.
+function command(frame: HTMLIFrameElement | null, func: string, args: unknown[] = []) {
+  frame?.contentWindow?.postMessage(
+    JSON.stringify({ event: "command", func, args }),
+    "*",
+  );
+}
+
+// Every elimination retriggers the next player in a fixed pool, so rapid
+// kills overlap (up to POOL voices) without spawning new YouTube embeds —
+// mounting a fresh player per kill melted the tab under a spree.
 export function DeathJingle() {
   const { dead, killAt, botKillAt } = useStore();
-  const [plays, setPlays] = useState<number[]>([]);
+  const frames = useRef<(HTMLIFrameElement | null)[]>([]);
+  const timers = useRef<(ReturnType<typeof setTimeout> | null)[]>([]);
+  const next = useRef(0);
   const wasDead = useRef(false);
   const lastKill = useRef(0);
   const lastBot = useRef(0);
-  const seq = useRef(0);
 
   const spawn = () => {
-    seq.current += 1;
-    const id = seq.current;
-    setPlays((p) => [...p, id].slice(-MAX_STACK));
-    setTimeout(() => {
-      setPlays((p) => p.filter((n) => n !== id));
+    const slot = next.current % POOL;
+    next.current += 1;
+    const frame = frames.current[slot];
+    command(frame, "seekTo", [0, true]);
+    command(frame, "playVideo");
+    const t = timers.current[slot];
+    if (t) clearTimeout(t);
+    timers.current[slot] = setTimeout(() => {
+      command(frames.current[slot], "pauseVideo");
     }, PLAY_MS);
   };
 
@@ -51,12 +64,15 @@ export function DeathJingle() {
 
   return (
     <>
-      {plays.map((id) => (
+      {Array.from({ length: POOL }, (_, i) => (
         <iframe
-          key={id}
+          key={i}
+          ref={(f) => {
+            frames.current[i] = f;
+          }}
           className="bhop-music-audio"
-          title="Elimination jingle"
-          src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&playsinline=1&rel=0`}
+          title={`Elimination jingle ${i + 1}`}
+          src={`https://www.youtube.com/embed/${VIDEO_ID}?enablejsapi=1&playsinline=1&rel=0`}
           width="200"
           height="200"
           allow="autoplay; encrypted-media"
