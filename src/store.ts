@@ -25,6 +25,7 @@ interface MuseumState {
   locked: boolean;
   started: boolean; // entered the game at least once this session
   room: RoomId;
+  playerPosition: [number, number];
   roomTitle: string | null;
   prompt: string | null;
   subtitle: string | null;
@@ -55,6 +56,7 @@ export const useStore = create<MuseumState>()((set) => ({
   locked: false,
   started: false,
   room: null,
+  playerPosition: [0, 0.5],
   roomTitle: null,
   prompt: null,
   subtitle: null,

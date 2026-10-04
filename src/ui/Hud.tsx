@@ -4,6 +4,7 @@ import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
 import { CHARACTERS } from "../world/Mascots";
 import { BhopMusic } from "./BhopMusic";
+import { MuseumMap } from "./MuseumMap";
 
 export function Hud() {
   const {
@@ -107,6 +108,7 @@ export function Hud() {
 
       {locked && (
         <>
+          <MuseumMap />
           {!dead && <div className="crosshair" />}
           {hurtAt > 0 && <div key={hurtAt} className="hurt-flash" />}
           {(room === "dm" || dead) && (

@@ -46,6 +46,7 @@ export function PlayerController() {
   const lookedAt = useRef<string | null>(null);
   const lastMove = useRef(performance.now());
   const roomTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastMapUpdate = useRef(0);
   const bobPhase = useRef(0);
   const lastStep = useRef(0);
   const fovExtra = useRef(0);
@@ -354,6 +355,11 @@ export function PlayerController() {
 
     // room tracking
     const room = roomAt(head.current.x, head.current.z);
+    if (state.locked && state.started && room !== "dm" &&
+        performance.now() - lastMapUpdate.current > 100) {
+      lastMapUpdate.current = performance.now();
+      state.set({ playerPosition: [head.current.x, head.current.z] });
+    }
     if (room !== state.room) {
       state.set({ room });
       const title = roomTitle(room);
