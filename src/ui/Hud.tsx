@@ -2,7 +2,9 @@ import { useStore } from "../store";
 import { session } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
-import { CHARACTERS } from "../world/Mascots";
+import { CHARACTERS, SKINS } from "../world/Mascots";
+import { airdrop, buySkin, initWallet } from "../systems/wallet";
+import { useEffect } from "react";
 import { BhopMusic } from "./BhopMusic";
 import { DeathJingle } from "./DeathJingle";
 import { MuseumMap } from "./MuseumMap";
@@ -30,10 +32,18 @@ export function Hud() {
     killName,
     deathBy,
     feed,
+    sol,
+    ownedSkins,
+    walletMsg,
+    walletMsgAt,
     set,
   } = useStore();
 
   const hpFrac = Math.max(0, Math.min(1, hp / MAX_HP));
+
+  useEffect(() => {
+    initWallet();
+  }, []);
 
   return (
     <div className="hud">
@@ -97,6 +107,38 @@ export function Hud() {
                 ))}
               </div>
               <p className="char-note">press V in-game to see yourself</p>
+              <div className="skin-shop">
+                <p className="char-label">
+                  SKINS · {sol.toFixed(1)} SOL
+                  <button className="airdrop-btn" onClick={() => airdrop()}>
+                    AIRDROP
+                  </button>
+                </p>
+                <div className="char-row">
+                  {SKINS.map((k) => {
+                    const owned = ownedSkins.includes(k.id);
+                    const equipped = character === k.id;
+                    return (
+                      <button
+                        key={k.id}
+                        className={`char-btn skin-btn${equipped ? " selected" : ""}${owned ? " owned-skin" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (owned) set({ character: k.id });
+                          else buySkin(k.id);
+                        }}
+                      >
+                        <span className="char-swatch" style={{ background: k.swatch }} />
+                        {k.name}
+                        <span className="skin-price">
+                          {equipped ? "EQUIPPED" : owned ? "OWNED" : `${k.price} SOL`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="char-note">demo wallet · devnet mode when the chain cooperates</p>
+              </div>
             </div>
             <p className="start-cta">CLICK TO ENTER</p>
             <p className="start-controls">
@@ -194,6 +236,9 @@ export function Hud() {
         </>
       )}
 
+      {walletMsg && Date.now() - walletMsgAt < 4000 && (
+        <div key={walletMsgAt} className="wallet-toast">{walletMsg}</div>
+      )}
       <BhopMusic />
       <DeathJingle />
 
