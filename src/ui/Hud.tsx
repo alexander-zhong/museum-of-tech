@@ -1,7 +1,9 @@
 import { useStore } from "../store";
+import { WEAPONS, weaponById } from "../systems/weapons";
 
 export function Hud() {
-  const { locked, prompt, subtitle, roomTitle, hitAt } = useStore();
+  const { locked, prompt, subtitle, roomTitle, hitAt, buyMenu, weapon, armed } =
+    useStore();
 
   return (
     <div className="hud">
@@ -38,6 +40,29 @@ export function Hud() {
           {prompt && <div className="prompt">{prompt}</div>}
           {roomTitle && <div className="room-title">{roomTitle}</div>}
           <div id="speedo" className="speedo" />{/* driven imperatively by PlayerController */}
+          {armed && (
+            <div className="weapon-label">
+              {weaponById(weapon).name}
+              <span className="weapon-hint"> · B buy menu</span>
+            </div>
+          )}
+          {buyMenu && (
+            <div className="buy-menu">
+              <div className="buy-title">BUY MENU</div>
+              {WEAPONS.map((w, i) => (
+                <div
+                  key={w.id}
+                  className={`buy-row${w.id === weapon ? " owned" : ""}`}
+                >
+                  <span className="buy-key">{i + 1}</span>
+                  <span className="buy-name">{w.name}</span>
+                  <span className="buy-tag">{w.tag}</span>
+                  <span className="buy-price">${w.price.toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="buy-footer">FUNDS: $16,000 · they respawn, don't worry</div>
+            </div>
+          )}
         </>
       )}
 

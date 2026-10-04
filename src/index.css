@@ -126,6 +126,85 @@ canvas {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
 }
 
+/* weapon label + CS buy menu */
+.weapon-label {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--orange);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+.weapon-hint {
+  color: var(--gray);
+  font-size: 12px;
+}
+
+.buy-menu {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100% - 48px));
+  background: rgba(16, 26, 33, 0.94);
+  border: 1px solid var(--orange);
+  border-radius: 6px;
+  padding: 18px 22px;
+  box-shadow: 0 0 40px rgba(252, 121, 0, 0.15);
+}
+
+.buy-title {
+  color: var(--orange);
+  letter-spacing: 0.3em;
+  font-size: 15px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(252, 121, 0, 0.3);
+  padding-bottom: 10px;
+}
+
+.buy-row {
+  display: grid;
+  grid-template-columns: 28px 120px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--light);
+}
+
+.buy-row.owned {
+  background: rgba(2, 120, 255, 0.12);
+  outline: 1px solid rgba(2, 120, 255, 0.4);
+}
+
+.buy-key {
+  color: var(--blue);
+  font-weight: bold;
+}
+
+.buy-name {
+  letter-spacing: 0.08em;
+}
+
+.buy-tag {
+  color: var(--gray);
+  font-size: 12px;
+}
+
+.buy-price {
+  color: var(--orange);
+}
+
+.buy-footer {
+  margin-top: 12px;
+  color: var(--gray);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+}
+
 /* CS-style hitmarker: four ticks around the crosshair, flash and fade */
 .hitmarker {
   position: absolute;

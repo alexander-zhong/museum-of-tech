@@ -18,6 +18,9 @@ interface MuseumState {
   subtitle: string | null;
   mode: "walk" | "pong";
   view: "first" | "third";
+  weapon: string;
+  buyMenu: boolean;
+  armed: boolean; // picked up the replica in the CS room
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
   set: (p: Partial<MuseumState>) => void;
 }
@@ -30,6 +33,9 @@ export const useStore = create<MuseumState>((set) => ({
   subtitle: null,
   mode: "walk",
   view: "first",
+  weapon: "pistol",
+  buyMenu: false,
+  armed: false,
   hitAt: 0,
   set: (p) => set(p),
 }));

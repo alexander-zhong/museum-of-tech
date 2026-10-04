@@ -9,6 +9,7 @@ import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
 import { sfxFootstep, startAmbient } from "../systems/sfx";
 import { feel } from "../systems/feel";
+import { weaponById } from "../systems/weapons";
 
 const SPEED = 4;
 const SPRINT = 6.2;
@@ -81,7 +82,8 @@ export function PlayerController() {
       const fwd = (k.KeyW ? 1 : 0) - (k.KeyS ? 1 : 0);
       const strafe = (k.KeyD ? 1 : 0) - (k.KeyA ? 1 : 0);
       const sprinting = (k.ShiftLeft || k.ShiftRight) && fwd > 0;
-      const groundMax = sprinting ? SPRINT : SPEED;
+      const weaponMult = state.armed ? weaponById(state.weapon).speedMult : 1;
+      const groundMax = (sprinting ? SPRINT : SPEED) * weaponMult;
       const grounded = jumpY.current <= 0.0001 && vy.current <= 0;
       const now = performance.now();
 
@@ -224,7 +226,7 @@ export function PlayerController() {
     // FOV: speed widen + shot kick, one smooth lerp
     feel.fovKick = Math.max(0, feel.fovKick - d * 14);
     const speedFov = Math.min(10, Math.max(0, (vel.current.length() - SPEED) * 1.6));
-    const targetExtra = speedFov + feel.fovKick;
+    const targetExtra = speedFov + feel.fovKick + feel.fovZoom;
     fovExtra.current += (targetExtra - fovExtra.current) * Math.min(1, d * 9);
     const cam = camera as THREE.PerspectiveCamera;
     const wantFov = BASE_FOV + fovExtra.current;

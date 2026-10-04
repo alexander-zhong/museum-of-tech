@@ -24,31 +24,55 @@ function noiseBuffer(a: AudioContext, seconds: number): AudioBuffer {
   return buf;
 }
 
-export function sfxShoot() {
+export function sfxShoot(kind: string = "rifle") {
   const a = ac();
   if (!a) return;
   const t = a.currentTime;
-  // noise crack
+
+  if (kind === "knife") {
+    // whoosh: bandpass noise sweeping up
+    const src = a.createBufferSource();
+    src.buffer = noiseBuffer(a, 0.12);
+    const f = a.createBiquadFilter();
+    f.type = "bandpass";
+    f.Q.value = 2;
+    f.frequency.setValueAtTime(500, t);
+    f.frequency.exponentialRampToValueAtTime(2400, t + 0.1);
+    const g = a.createGain();
+    env(g, t, 0.2, 0.12);
+    src.connect(f).connect(g).connect(a.destination);
+    src.start(t);
+    return;
+  }
+
+  const P: Record<string, { f0: number; f1: number; dur: number; crack: number; th0: number; th1: number; thump: number }> = {
+    pistol: { f0: 2600, f1: 420, dur: 0.1, crack: 0.4, th0: 190, th1: 70, thump: 0.3 },
+    smg: { f0: 2900, f1: 500, dur: 0.07, crack: 0.3, th0: 210, th1: 90, thump: 0.22 },
+    rifle: { f0: 3200, f1: 300, dur: 0.14, crack: 0.5, th0: 140, th1: 45, thump: 0.45 },
+    awp: { f0: 1500, f1: 110, dur: 0.32, crack: 0.65, th0: 85, th1: 28, thump: 0.6 },
+  };
+  const p = P[kind] ?? P.rifle;
+
   const src = a.createBufferSource();
-  src.buffer = noiseBuffer(a, 0.15);
+  src.buffer = noiseBuffer(a, p.dur + 0.05);
   const f = a.createBiquadFilter();
   f.type = "lowpass";
-  f.frequency.setValueAtTime(3200, t);
-  f.frequency.exponentialRampToValueAtTime(300, t + 0.12);
+  f.frequency.setValueAtTime(p.f0, t);
+  f.frequency.exponentialRampToValueAtTime(p.f1, t + p.dur);
   const g = a.createGain();
-  env(g, t, 0.5, 0.14);
+  env(g, t, p.crack, p.dur + 0.02);
   src.connect(f).connect(g).connect(a.destination);
   src.start(t);
-  // low thump
+
   const o = a.createOscillator();
   o.type = "sine";
-  o.frequency.setValueAtTime(140, t);
-  o.frequency.exponentialRampToValueAtTime(45, t + 0.1);
+  o.frequency.setValueAtTime(p.th0, t);
+  o.frequency.exponentialRampToValueAtTime(p.th1, t + p.dur * 0.8);
   const g2 = a.createGain();
-  env(g2, t, 0.45, 0.12);
+  env(g2, t, p.thump, p.dur);
   o.connect(g2).connect(a.destination);
   o.start(t);
-  o.stop(t + 0.15);
+  o.stop(t + p.dur + 0.05);
 }
 
 export function sfxHit() {

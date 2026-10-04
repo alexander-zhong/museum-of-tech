@@ -2,6 +2,7 @@
 // decayed and applied by the PlayerController each frame.
 export const feel = {
   fovKick: 0,
+  fovZoom: 0, // negative while scoped (AWP right-click)
   // fed by PlayerController each frame; read by the third-person avatar
   avatarMoving: false,
   avatarSpeed: 0,
