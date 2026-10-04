@@ -1,6 +1,7 @@
 import { useStore } from "../store";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { CHARACTERS } from "../world/Mascots";
+import { BhopMusic } from "./BhopMusic";
 
 export function Hud() {
   const {
@@ -72,7 +73,6 @@ export function Hud() {
           )}
           {prompt && <div className="prompt">{prompt}</div>}
           {roomTitle && <div className="room-title">{roomTitle}</div>}
-          <div id="speedo" className="speedo" />{/* driven imperatively by PlayerController */}
           {armed && (
             <div className="weapon-label">
               {weaponById(weapon).name}
@@ -98,6 +98,8 @@ export function Hud() {
           )}
         </>
       )}
+
+      <BhopMusic />
 
       {subtitle && (
         <div className="subtitle">
