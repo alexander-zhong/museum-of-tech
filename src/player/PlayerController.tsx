@@ -54,11 +54,16 @@ export function PlayerController() {
   const avatarFlop = useRef<THREE.Group>(null);
   const deadSince = useRef(0); // drives the death cam and your own ragdoll
   const deadYaw = useRef(0); // the way you were facing when you dropped
+  const roll = useRef(0); // death-cam roll, owned here — never read off the camera
   const thudded = useRef(false);
   const mySeed = useMemo(() => ragdollSeed(myId), []);
 
   useEffect(() => {
     camera.position.set(0, EYE, 0.5);
+    // Default XYZ order reports a fake z (roll) for any yaw+pitch look
+    // direction; YXZ matches how PointerLockControls builds the orientation,
+    // so rotation.z means roll and nothing else.
+    camera.rotation.order = "YXZ";
 
     const down = (e: KeyboardEvent) => {
       if (useStore.getState().lesson) return;
@@ -236,16 +241,17 @@ export function PlayerController() {
       // ...and the camera drops to the floor with them
       smoothY.current += (DEAD_EYE - smoothY.current) * Math.min(1, d * 6);
       head.current.y = smoothY.current;
-      camera.rotation.z += (DEAD_ROLL - camera.rotation.z) * Math.min(1, d * 5);
+      roll.current += (DEAD_ROLL - roll.current) * Math.min(1, d * 5);
     }
     if (!state.dead) {
       deadSince.current = 0;
-      // unroll on respawn
-      if (camera.rotation.z !== 0) {
-        camera.rotation.z *= 1 - Math.min(1, d * 8);
-        if (Math.abs(camera.rotation.z) < 0.001) camera.rotation.z = 0;
+      if (roll.current !== 0) {
+        roll.current *= 1 - Math.min(1, d * 8); // unroll on respawn
+        if (Math.abs(roll.current) < 0.001) roll.current = 0;
       }
     }
+    // the camera's roll is ours alone: assert it, never read it back
+    camera.rotation.z = roll.current;
 
     if (!state.locked) feel.avatarMoving = false; // paused = standing, not moonwalking
 
