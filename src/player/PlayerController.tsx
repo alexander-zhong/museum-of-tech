@@ -26,7 +26,6 @@ const AIR_ACCEL = 24;
 const MAX_AIR_SPEED = 11; // hard cap on horizontal speed
 const BHOP_WINDOW = 160; // ms after landing where a jump keeps momentum
 const BHOP_BOOST = 1.09; // speed multiplier per chained hop
-const UPS = 62.5; // display conversion: 4 m/s walk ≈ 250 u/s, CS-style
 const BOOM = 3.1; // third-person camera distance
 
 export function PlayerController() {
@@ -43,7 +42,6 @@ export function PlayerController() {
   const vy = useRef(0);
   const jumpY = useRef(0); // height above the floor
   const lastLand = useRef(0);
-  const speedoTimer = useRef(0);
   const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
   const smoothY = useRef(EYE);
   const avatar = useRef<THREE.Group>(null);
@@ -164,22 +162,6 @@ export function PlayerController() {
       if (moving) lastMove.current = now;
       feel.avatarMoving = moving;
       feel.avatarSpeed = hSpeed;
-
-      // speedometer (imperative DOM — avoids re-rendering React every frame)
-      speedoTimer.current += d;
-      if (speedoTimer.current > 0.08) {
-        speedoTimer.current = 0;
-        const el = document.getElementById("speedo");
-        if (el) {
-          if (hSpeed > SPEED + 0.3 || !grounded) {
-            el.textContent = `${Math.round(hSpeed * UPS)} u/s`;
-            el.style.opacity = "1";
-            el.style.color = hSpeed > SPRINT + 0.5 ? "#fc7900" : "#9ca3af";
-          } else {
-            el.style.opacity = "0";
-          }
-        }
-      }
 
       // idle nag
       if (now - lastMove.current > 20000) {
