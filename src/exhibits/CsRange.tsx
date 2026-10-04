@@ -439,7 +439,7 @@ export function CsRange() {
             }}
             userData={{ targetIndex: i }}
           >
-            <mesh position={[0, 0.32, 0]}>
+            <mesh position={[0, 0.32, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <cylinderGeometry args={[0.3, 0.3, 0.05, 20]} />
               <meshStandardMaterial
                 color="#fc7900"
@@ -448,7 +448,7 @@ export function CsRange() {
                 side={THREE.DoubleSide}
               />
             </mesh>
-            <mesh position={[0, 0.32, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh position={[0, 0.32, 0.03]}>
               <ringGeometry args={[0.1, 0.16, 20]} />
               <meshBasicMaterial color="#101a21" side={THREE.DoubleSide} />
             </mesh>
