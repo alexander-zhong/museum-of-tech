@@ -15,8 +15,7 @@ export function Sparky() {
   const { actions } = useAnimations(animations, group);
 
   useEffect(() => {
-    const first = Object.values(actions)[0];
-    first?.reset().play();
+    Object.values(actions).forEach((a) => a?.reset().play());
     const unregister = registerInteract("sparky", "E — Sparky", () =>
       say("sparky"),
     );
@@ -208,8 +207,8 @@ export function OtterRig({
   const walkAnim = useAnimations(walk.animations, walkRef);
 
   useEffect(() => {
-    Object.values(idleAnim.actions)[0]?.reset().play();
-    Object.values(walkAnim.actions)[0]?.reset().play();
+    Object.values(idleAnim.actions).forEach((a) => a?.reset().play());
+    Object.values(walkAnim.actions).forEach((a) => a?.reset().play());
   }, [idleAnim.actions, walkAnim.actions]);
 
   useEffect(() => {
@@ -249,9 +248,10 @@ export function TargetOtter({ hue }: { hue: number }) {
     applyHue(scene, hue);
   }, [scene, hue]);
   useEffect(() => {
-    const act = Object.values(actions)[0];
-    act?.reset().play();
-    if (act) act.time = Math.random() * 2; // desync the six bots
+    Object.values(actions).forEach((a) => {
+      a?.reset().play();
+      if (a) a.time = Math.random() * 2; // desync the six bots
+    });
   }, [actions]);
   return (
     <group ref={ref}>
