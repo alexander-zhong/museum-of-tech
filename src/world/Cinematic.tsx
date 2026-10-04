@@ -14,7 +14,7 @@ type Shot =
   | { kind: "dolly"; from: [number, number, number]; to: [number, number, number]; look: [number, number, number]; dur: number }
   | { kind: "orbit"; center: [number, number, number]; r: number; y: number; a0: number; a1: number; dur: number };
 
-type TourShot = Shot & { audioSrc?: string };
+type TourShot = Shot & { audioSrc?: string; lesson?: string };
 
 const TOUR: TourShot[] = [
   // 0. entry hall orbit (kept tight so it stays inside the hall)
@@ -22,13 +22,13 @@ const TOUR: TourShot[] = [
   // 1. corridor push
   { kind: "dolly", from: [0, 1.9, -4.6], to: [0, 1.7, -13.5], look: [0, 1.3, -20], dur: 10 },
   // 2. room 01 · transistor (west near) — in through the door gap
-  { kind: "dolly", from: [-3.4, 1.6, -9.5], to: [-8.5, 1.6, -9.5], look: [-12.4, 1.3, -9.5], dur: 12, audioSrc: "/audio/learn-eniac.mp3" },
+  { kind: "dolly", from: [-3.4, 1.6, -9.5], to: [-8.5, 1.6, -9.5], look: [-12.4, 1.3, -9.5], dur: 12, audioSrc: "/audio/learn-eniac.mp3", lesson: "eniac" },
   // 3. room 02 · integrated circuit (east near)
-  { kind: "dolly", from: [3.4, 1.6, -9.5], to: [8.5, 1.6, -9.5], look: [12.4, 1.3, -9.5], dur: 12, audioSrc: "/audio/learn-bombe.mp3" },
+  { kind: "dolly", from: [3.4, 1.6, -9.5], to: [8.5, 1.6, -9.5], look: [12.4, 1.3, -9.5], dur: 12, audioSrc: "/audio/learn-bombe.mp3", lesson: "bombe" },
   // 4. room 03 · compiler (west far)
-  { kind: "dolly", from: [-3.4, 1.6, -20.5], to: [-8.5, 1.6, -20.5], look: [-12.3, 1.3, -20.5], dur: 12, audioSrc: "/audio/learn-pong.mp3" },
+  { kind: "dolly", from: [-3.4, 1.6, -20.5], to: [-8.5, 1.6, -20.5], look: [-12.3, 1.3, -20.5], dur: 12, audioSrc: "/audio/learn-pong.mp3", lesson: "pong" },
   // 5. room 04 · network (east far)
-  { kind: "dolly", from: [3.4, 1.6, -20.5], to: [8.5, 1.6, -20.5], look: [12.4, 1.3, -20.5], dur: 12, audioSrc: "/audio/learn-agc.mp3" },
+  { kind: "dolly", from: [3.4, 1.6, -20.5], to: [8.5, 1.6, -20.5], look: [12.4, 1.3, -20.5], dur: 12, audioSrc: "/audio/learn-agc.mp3", lesson: "agc" },
   // 6. CS room: push toward the strafing bots
   { kind: "dolly", from: [0, 1.8, -27.2], to: [0, 1.5, -33.5], look: [0, 1.1, -37.3], dur: 13 },
   // 7. portal close-up (east wall of the CS room)
@@ -55,12 +55,16 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
     audio.current = null;
   };
 
+  const audioDone = () =>
+    !audio.current || audio.current.ended || audio.current.error !== null;
+
   useFrame((_, dt) => {
     if (!cinema) {
       if (started.current) {
         stopAudio();
         feel.cinemaPov = false;
         started.current = false;
+        if (useStore.getState().lesson) useStore.getState().set({ lesson: null });
       }
       return;
     }
@@ -71,8 +75,15 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
     }
     feel.cinemaPov = false;
 
-    // advance shots; -1 means "about to start shot 0"
-    if (idx.current === -1 || t.current >= TOUR[idx.current].dur) {
+    // advance shots; -1 means "about to start shot 0".
+    // A shot holds its final frame until its voiceover finishes
+    // (with a hard cap so a broken file can never hang the tour).
+    const cur = idx.current >= 0 ? TOUR[idx.current] : null;
+    const shotDone =
+      cur !== null &&
+      t.current >= cur.dur &&
+      (audioDone() || t.current >= cur.dur + 20);
+    if (idx.current === -1 || shotDone) {
       idx.current += 1;
       t.current = 0;
       const shot = TOUR[idx.current];
@@ -87,6 +98,11 @@ export function Cinematic({ head }: { head: { current: THREE.Vector3 } }) {
         audio.current.play().catch(() => {});
       } catch {
         /* voiceover missing: the tour still runs silent */
+      }
+      // the tour "presses E" in each room: open/close its experiment panel
+      const s2 = useStore.getState();
+      if ((shot.lesson ?? null) !== s2.lesson) {
+        s2.set({ lesson: (shot.lesson ?? null) as never });
       }
     }
 
