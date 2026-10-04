@@ -17,6 +17,7 @@ interface MuseumState {
   prompt: string | null;
   subtitle: string | null;
   mode: "walk" | "pong";
+  view: "first" | "third";
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
   set: (p: Partial<MuseumState>) => void;
 }
@@ -28,6 +29,7 @@ export const useStore = create<MuseumState>((set) => ({
   prompt: null,
   subtitle: null,
   mode: "walk",
+  view: "first",
   hitAt: 0,
   set: (p) => set(p),
 }));

@@ -275,7 +275,8 @@ export function CsRange() {
   useFrame((state, dt) => {
     // viewmodel follows the camera
     if (gun.current) {
-      gun.current.visible = equipped.current && useStore.getState().locked;
+      const st = useStore.getState();
+      gun.current.visible = equipped.current && st.locked && st.view === "first";
       if (gun.current.visible) {
         recoil.current = Math.max(0, recoil.current - dt * 8);
         const sway = Math.sin(state.clock.elapsedTime * 1.7) * 0.004;

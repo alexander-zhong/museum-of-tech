@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
-import { collide, roomAt, roomTitle } from "../world/layout";
+import { collide, pointBlocked, roomAt, roomTitle } from "../world/layout";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
@@ -25,6 +25,7 @@ const MAX_AIR_SPEED = 11; // hard cap on horizontal speed
 const BHOP_WINDOW = 160; // ms after landing where a jump keeps momentum
 const BHOP_BOOST = 1.09; // speed multiplier per chained hop
 const UPS = 62.5; // display conversion: 4 m/s walk ≈ 250 u/s, CS-style
+const BOOM = 3.1; // third-person camera distance
 
 export function PlayerController() {
   const { camera, scene } = useThree();
@@ -41,6 +42,9 @@ export function PlayerController() {
   const jumpY = useRef(0); // height above the floor
   const lastLand = useRef(0);
   const speedoTimer = useRef(0);
+  const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
+  const smoothY = useRef(EYE);
+  const avatar = useRef<THREE.Group>(null);
 
   useEffect(() => {
     camera.position.set(0, EYE, 0.5);
@@ -49,6 +53,10 @@ export function PlayerController() {
       keys.current[e.code] = true;
       if (e.code === "KeyE" && lookedAt.current) {
         dispatchInteract(lookedAt.current);
+      }
+      if (e.code === "KeyV") {
+        const s = useStore.getState();
+        s.set({ view: s.view === "first" ? "third" : "first" });
       }
     };
     const up = (e: KeyboardEvent) => {
@@ -125,13 +133,13 @@ export function PlayerController() {
       }
 
       // horizontal integrate with wall slide (kill velocity into walls)
-      const intendedX = camera.position.x + vel.current.x * d;
-      const intendedZ = camera.position.z + vel.current.z * d;
+      const intendedX = head.current.x + vel.current.x * d;
+      const intendedZ = head.current.z + vel.current.z * d;
       const [nx, nz] = collide(intendedX, intendedZ);
       if (Math.abs(nx - intendedX) > 1e-6) vel.current.x = 0;
       if (Math.abs(nz - intendedZ) > 1e-6) vel.current.z = 0;
-      camera.position.x = nx;
-      camera.position.z = nz;
+      head.current.x = nx;
+      head.current.z = nz;
 
       const hSpeed = vel.current.length();
       const moving = hSpeed > 0.3;
@@ -146,8 +154,9 @@ export function PlayerController() {
         }
       }
       const bob = grounded && moving ? Math.sin(bobPhase.current) * 0.035 : 0;
-      camera.position.y +=
-        (EYE + jumpY.current + bob - camera.position.y) * Math.min(1, d * 14);
+      smoothY.current +=
+        (EYE + jumpY.current + bob - smoothY.current) * Math.min(1, d * 14);
+      head.current.y = smoothY.current;
 
       if (moving) lastMove.current = now;
 
@@ -174,6 +183,41 @@ export function PlayerController() {
       }
     }
 
+    // camera placement: first person = at the head; third = boom behind, wall-clamped
+    const third = state.view === "third";
+    if (third) {
+      const fwdDir = new THREE.Vector3();
+      camera.getWorldDirection(fwdDir);
+      let t = 1;
+      for (; t >= 0.15; t -= 0.1) {
+        const sx = head.current.x - fwdDir.x * BOOM * t;
+        const sz = head.current.z - fwdDir.z * BOOM * t;
+        if (!pointBlocked(sx, sz)) break;
+      }
+      camera.position.set(
+        head.current.x - fwdDir.x * BOOM * t,
+        Math.min(3.7, Math.max(0.5, head.current.y - fwdDir.y * BOOM * t + 0.25)),
+        head.current.z - fwdDir.z * BOOM * t,
+      );
+    } else {
+      camera.position.copy(head.current);
+    }
+
+    // avatar visible only in third person, facing camera yaw
+    if (avatar.current) {
+      avatar.current.visible = third && state.locked;
+      if (avatar.current.visible) {
+        avatar.current.position.set(
+          head.current.x,
+          head.current.y - EYE,
+          head.current.z,
+        );
+        const fwdDir = new THREE.Vector3();
+        camera.getWorldDirection(fwdDir);
+        avatar.current.rotation.y = Math.atan2(fwdDir.x, fwdDir.z);
+      }
+    }
+
     // FOV: speed widen + shot kick, one smooth lerp
     feel.fovKick = Math.max(0, feel.fovKick - d * 14);
     const speedFov = Math.min(10, Math.max(0, (vel.current.length() - SPEED) * 1.6));
@@ -187,7 +231,7 @@ export function PlayerController() {
     }
 
     // room tracking
-    const room = roomAt(camera.position.x, camera.position.z);
+    const room = roomAt(head.current.x, head.current.z);
     if (room !== state.room) {
       state.set({ room });
       const title = roomTitle(room);
@@ -204,7 +248,7 @@ export function PlayerController() {
 
     // crosshair raycast for interactables
     raycaster.current.setFromCamera(new THREE.Vector2(0, 0), camera);
-    raycaster.current.far = REACH;
+    raycaster.current.far = REACH + camera.position.distanceTo(head.current);
     const hits = raycaster.current.intersectObjects(scene.children, true);
     let found: string | null = null;
     for (const h of hits) {
@@ -230,15 +274,38 @@ export function PlayerController() {
   });
 
   return (
-    <PointerLockControls
-      onLock={() => {
-        useStore.getState().set({ locked: true });
-        startAmbient();
-        say("intro");
-      }}
-      onUnlock={() =>
-        useStore.getState().set({ locked: false, mode: "walk", prompt: null })
-      }
-    />
+    <>
+      <PointerLockControls
+        onLock={() => {
+          useStore.getState().set({ locked: true });
+          startAmbient();
+          say("intro");
+        }}
+        onUnlock={() =>
+          useStore.getState().set({ locked: false, mode: "walk", prompt: null })
+        }
+      />
+      {/* third-person avatar: low-poly museum visitor */}
+      <group ref={avatar} visible={false}>
+        <mesh position={[0, 0.78, 0]} raycast={() => null}>
+          <capsuleGeometry args={[0.24, 0.8, 4, 10]} />
+          <meshStandardMaterial color="#1e2430" roughness={0.6} metalness={0.3} />
+        </mesh>
+        <mesh position={[0, 1.52, 0]} raycast={() => null}>
+          <sphereGeometry args={[0.17, 14, 14]} />
+          <meshStandardMaterial color="#232a38" roughness={0.5} />
+        </mesh>
+        {/* visor */}
+        <mesh position={[0, 1.54, 0.13]} raycast={() => null}>
+          <boxGeometry args={[0.2, 0.06, 0.1]} />
+          <meshBasicMaterial color="#fc7900" toneMapped={false} />
+        </mesh>
+        {/* backpack */}
+        <mesh position={[0, 0.95, -0.24]} raycast={() => null}>
+          <boxGeometry args={[0.3, 0.42, 0.14]} />
+          <meshStandardMaterial color="#182028" roughness={0.8} />
+        </mesh>
+      </group>
+    </>
   );
 }

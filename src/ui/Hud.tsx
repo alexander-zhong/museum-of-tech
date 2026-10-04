@@ -21,7 +21,7 @@ export function Hud() {
             </p>
             <p className="start-cta">CLICK TO ENTER</p>
             <p className="start-controls">
-              WASD move · SPACE jump (hold it to bhop) · SHIFT sprint · E interact · ESC release
+              WASD move · SPACE jump (hold it to bhop) · SHIFT sprint · E interact · V camera · ESC release
             </p>
           </div>
         </div>

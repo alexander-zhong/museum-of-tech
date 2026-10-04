@@ -94,6 +94,21 @@ export function collide(px: number, pz: number): [number, number] {
   return [px, pz];
 }
 
+// Is this point inside any solid (for third-person camera boom)?
+export function pointBlocked(px: number, pz: number, pad = 0.25): boolean {
+  for (const w of SOLIDS) {
+    if (
+      px > w.x - w.w / 2 - pad &&
+      px < w.x + w.w / 2 + pad &&
+      pz > w.z - w.d / 2 - pad &&
+      pz < w.z + w.d / 2 + pad
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 interface RoomDef {
   id: Exclude<RoomId, null>;
   title: string;
