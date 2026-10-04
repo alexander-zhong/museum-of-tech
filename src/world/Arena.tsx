@@ -54,30 +54,30 @@ export function PortalGate({
 export function Arena() {
   return (
     <group>
-      {/* floor + no ceiling: the arena floats in the void */}
+      {/* floor: Valorant-range white */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, 0, CZ]}>
         <planeGeometry args={[40.6, 40.6]} />
-        <meshStandardMaterial color="#141017" roughness={0.8} metalness={0.2} />
+        <meshStandardMaterial color="#cfd3da" roughness={0.85} />
       </mesh>
-      {/* perimeter walls with neon top trim */}
+      {/* white perimeter walls with neon top trim */}
       {ARENA_WALLS.map((w, i) => (
         <group key={i}>
           <mesh position={[w.x, WALL_HEIGHT / 2, w.z]}>
             <boxGeometry args={[w.w, WALL_HEIGHT, w.d]} />
-            <meshStandardMaterial color="#1d1420" roughness={0.8} />
+            <meshStandardMaterial color="#e9ebef" roughness={0.9} />
           </mesh>
           <mesh position={[w.x, WALL_HEIGHT - 0.06, w.z]} raycast={() => null}>
             <boxGeometry args={[Math.max(w.w, 0.1), 0.08, Math.max(w.d, 0.1)]} />
-            <meshBasicMaterial color="#fc2d5e" toneMapped={false} />
+            <meshBasicMaterial color="#fc7900" toneMapped={false} />
           </mesh>
         </group>
       ))}
-      {/* cover blocks with glowing edges */}
+      {/* white cover blocks with orange edges */}
       {ARENA_COVER.map((c, i) => (
         <group key={`c-${i}`}>
           <mesh position={[c.x, c.h / 2, c.z]}>
             <boxGeometry args={[c.w, c.h, c.d]} />
-            <meshStandardMaterial color="#231a28" roughness={0.6} metalness={0.3} />
+            <meshStandardMaterial color="#dfe2e8" roughness={0.7} />
           </mesh>
           <mesh position={[c.x, c.h + 0.02, c.z]} raycast={() => null}>
             <boxGeometry args={[c.w + 0.04, 0.05, c.d + 0.04]} />
@@ -85,10 +85,10 @@ export function Arena() {
           </mesh>
         </group>
       ))}
-      {/* lighting: two hot corners + cold center (lights are the perf budget) */}
-      <pointLight position={[74, 3.4, -14]} color="#fc2d5e" intensity={55} distance={30} decay={1.6} />
-      <pointLight position={[106, 3.4, -46]} color="#0278ff" intensity={55} distance={30} decay={1.6} />
-      <pointLight position={[CX, 5, CZ]} color="#fff0d0" intensity={60} distance={28} decay={1.7} />
+      {/* bright practice-range lighting */}
+      <pointLight position={[78, 4.2, -18]} color="#ffffff" intensity={65} distance={32} decay={1.6} />
+      <pointLight position={[102, 4.2, -42]} color="#ffffff" intensity={65} distance={32} decay={1.6} />
+      <pointLight position={[CX, 5.5, CZ]} color="#fff5e8" intensity={75} distance={30} decay={1.6} />
 
       {/* arena -> museum portal (blue, by the north wall) */}
       <PortalGate pos={[90, 0, -11.5]} color="#0278ff" />
