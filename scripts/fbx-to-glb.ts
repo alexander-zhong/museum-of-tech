@@ -17,6 +17,58 @@ import { FBXLoader, GLTFExporter } from "three-stdlib";
 const SRC_DIRS = ["assets/models-src", "public/models"];
 const OUT_DIR = "public/models";
 
+/**
+ * FBXLoader returns one geometry carrying every material as a "group".
+ * GLTFExporter turns each group into a primitive but does NOT slice the
+ * vertex data, so every primitive ends up referencing the whole buffer —
+ * i.e. N complete copies of the model stacked on each other, one per
+ * material, and only the last drawn is visible. Split the groups into real
+ * separate meshes first so each one owns only its own triangles.
+ */
+function splitByGroups(mesh: THREE.Mesh): THREE.Mesh[] {
+  const geo = mesh.geometry as THREE.BufferGeometry;
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  if (geo.groups.length <= 1 || mats.length <= 1) return [mesh];
+
+  return geo.groups.map((g) => {
+    const sub = new THREE.BufferGeometry();
+    for (const name of Object.keys(geo.attributes)) {
+      const attr = geo.attributes[name] as THREE.BufferAttribute;
+      let values: ArrayLike<number>;
+      if (geo.index) {
+        // gather the vertices this group's indices point at
+        const out: number[] = [];
+        for (let i = g.start; i < g.start + g.count; i++) {
+          const v = geo.index.getX(i);
+          for (let c = 0; c < attr.itemSize; c++)
+            out.push(attr.array[v * attr.itemSize + c] as number);
+        }
+        values = out;
+      } else {
+        values = (attr.array as Float32Array).slice(
+          g.start * attr.itemSize,
+          (g.start + g.count) * attr.itemSize,
+        );
+      }
+      sub.setAttribute(
+        name,
+        new THREE.BufferAttribute(
+          values instanceof Float32Array ? values : new Float32Array(values),
+          attr.itemSize,
+          attr.normalized,
+        ),
+      );
+    }
+    const mat = mats[g.materialIndex ?? 0];
+    const out = new THREE.Mesh(sub, mat);
+    out.name = `${mesh.name || "part"}_${mat.name || g.materialIndex}`;
+    out.position.copy(mesh.position);
+    out.quaternion.copy(mesh.quaternion);
+    out.scale.copy(mesh.scale);
+    return out;
+  });
+}
+
 function convert(file: string) {
   const buf = readFileSync(file);
   const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
@@ -25,6 +77,22 @@ function convert(file: string) {
   // FBXLoader builds MeshPhongMaterial, which glTF has no equivalent for —
   // the exporter warns and approximates. Convert to MeshStandardMaterial
   // ourselves so the conversion is explicit rather than guessed downstream.
+  // split first, then walk the result
+  const toSplit: THREE.Mesh[] = [];
+  group.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh && (m.geometry as THREE.BufferGeometry).groups?.length > 1)
+      toSplit.push(m);
+  });
+  let split = 0;
+  for (const m of toSplit) {
+    const parts = splitByGroups(m);
+    if (parts.length <= 1) continue;
+    split += parts.length;
+    m.parent?.add(...parts);
+    m.removeFromParent();
+  }
+
   let meshes = 0;
   const materials: string[] = [];
   group.traverse((o) => {
@@ -92,6 +160,7 @@ function convert(file: string) {
         writeFileSync(out, glb);
         console.log(
           `${basename(file)} -> ${basename(out)}\n` +
+            (split ? `  split 1 grouped mesh into ${split} real meshes\n` : "") +
             `  ${meshes} mesh(es), ${materials.length} material(s)\n` +
             materials.map((m) => `    - ${m}\n`).join("") +
             `  ${group.animations.length} animation(s)\n` +
