@@ -5,42 +5,34 @@ import { useStore } from "../store";
 // otherwise subtitles alone carry the joke.
 export const LINES: Record<string, string> = {
   intro:
-    "Welcome to the Museum of Dead Tech. WASD to walk, like your ancestors intended. Try not to touch anything. Actually no, touch everything, that's the point.",
+    "Welcome to the Museum of Dead Tech. WASD to walk. Touch everything. Break nothing. Let's go.",
   "entry-corridor":
-    "Four rooms, four machines that were each, briefly, the most advanced object on Earth. Now they live here. With you.",
+    "Everything in here used to be the coolest thing on the planet. It won't last. It never does.",
   "entry-eniac":
-    "ENIAC, 1945. Thirty tonnes, eighteen thousand vacuum tubes, and less compute than your doorbell. Flip the switches. It loves that.",
+    "The OG computer. Size of a house, dumber than your calculator. Flip the switches. Make it do math.",
   "entry-bombe":
-    "The Turing Bombe, 1940s. It broke Enigma and shortened a world war. You may press its button. You will feel important. You shouldn't.",
+    "This thing broke unbreakable codes and shortened a world war. Press the button. Feel something.",
   "entry-agc":
-    "The Apollo Guidance Computer, 1969. It landed humans on the Moon with 4 kilobytes of RAM. Your browser tab rendering me uses roughly forty thousand times that.",
+    "This landed people on the Moon with less memory than one of your selfies. No pressure.",
   "entry-pong":
-    "Pong, 1972. The entire video game industry, every speedrun, every loot box, traces back to two rectangles and profound boredom.",
-  "pong-start":
-    "First to three. The AI paddle was written in an afternoon, so losing would be embarrassing. For you.",
-  "pong-win":
-    "Congratulations. You defeated 1972. The bar was on the floor and you cleared it.",
-  "pong-lose":
-    "You lost. To two if-statements. The museum keeps a record of this.",
-  "eniac-done":
-    "Arithmetic complete. In 1945 that cost a room, six operators, and a small city's electricity. You're welcome.",
-  "eniac-42":
-    "Forty-two. The answer to life, the universe, and everything. ENIAC knew it first, it just couldn't tell anyone.",
+    "Pong. The big bang of gaming. Every game you've ever loved started with two rectangles.",
+  "pong-start": "First to three. Lose and it goes on your permanent record.",
+  "pong-win": "You beat 1972. Flex it.",
+  "pong-lose": "You lost to two if-statements. Walk it off.",
+  "eniac-done": "Boom. Math. In 1945 that took a whole room and six people.",
+  "eniac-42": "Forty-two. The answer to everything. Respect.",
   "agc-advance":
-    "Verb. Noun. The astronauts memorized hundreds of these. You pressed one key. Equally heroic, really.",
+    "Verb, noun. Astronauts memorized hundreds of these. You pressed one key. Legend.",
   "agc-1202":
-    "Program alarm one-two-oh-two. Executive overflow. Armstrong kept descending. You would have turned the spacecraft off and back on.",
-  "bombe-start":
-    "Drums spinning. Somewhere, a 1940s codebreaker is doing this with pencil and genuine stakes. Enjoy your version.",
+    "Twelve-oh-two alarm. The Moon landing almost got cancelled by a pop-up. Armstrong kept going. Ice cold.",
+  "bombe-start": "Drums spinning. Codes breaking. Act natural.",
   "bombe-done":
-    "Message decrypted. It took Bletchley Park years of secret work. It took you one key press. History thanks you for your service.",
-  idle: "You've been standing still for a while. The exhibits are over there. Any of them. Pick one.",
+    "Cracked. Took the pros years. Took you one button. Don't let it go to your head.",
+  idle: "You good? The exhibits are right there.",
   "entry-cs":
-    "Counter-Strike, 1999. Built as a Half-Life mod by Minh Le, a computing science student at this very university, between assignments. The final exhibit, and the only one made down the hall.",
-  "cs-gun":
-    "You've picked up the museum's certified replica. Targets are downrange. Point, click, prove you belong at SFU. And please don't rush B.",
-  "cs-clear":
-    "All targets down. Somewhere, a 1999 dial-up server lags out of respect. Minh Le shipped a genre-defining game as a student. You hit six plywood circles. Close enough.",
+    "Counter-Strike. Built by Minh Le, an SFU student, between assignments. The GOAT walked these halls. Grab the gun.",
+  "cs-gun": "There it is. Point, click, make SFU proud. And don't rush B.",
+  "cs-clear": "All targets down. Minh Le would nod slightly. That's huge.",
 };
 
 const played = new Set<string>();

@@ -114,7 +114,7 @@ export function Agc() {
 
   useEffect(() => {
     draw();
-    return registerInteract("agc", "E — key in next sequence", () => {
+    return registerInteract("agc", "E — punch it in", () => {
       if (running.current) return;
       const steps = SEQUENCES[seqIndex.current % SEQUENCES.length];
       seqIndex.current++;

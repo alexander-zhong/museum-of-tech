@@ -166,17 +166,19 @@ export function CsRange() {
       ctx.fillStyle = "#e5e7eb";
       ctx.font = "34px monospace";
       const lines = [
-        "1999. Minh “Gooseman” Le, a computing",
-        "science student at SFU, builds a",
-        "Half-Life mod between assignments.",
+        "1999. SFU student Minh Le",
+        "builds a mod between assignments.",
         "",
-        "It becomes the most played FPS",
-        "on Earth and defines esports.",
+        "It becomes the biggest",
+        "shooter on Earth.",
         "",
-        "The other exhibits made computers.",
-        "A student here made them fun.",
+        "THE GOAT WALKED THESE HALLS.",
       ];
-      lines.forEach((l, i) => ctx.fillText(l, 512, 160 + i * 40));
+      ctx.font = "40px monospace";
+      lines.forEach((l, i) => {
+        ctx.fillStyle = i === 6 ? "#fc7900" : "#e5e7eb";
+        ctx.fillText(l, 512, 180 + i * 46);
+      });
     }
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
@@ -192,7 +194,7 @@ export function CsRange() {
 
   useEffect(() => {
     drawBoard();
-    const unregister = registerInteract("cs-gun", "E — pick up the replica", () => {
+    const unregister = registerInteract("cs-gun", "E — grab the gun", () => {
       if (equipped.current) return;
       equipped.current = true;
       if (tableGun.current) tableGun.current.visible = false;

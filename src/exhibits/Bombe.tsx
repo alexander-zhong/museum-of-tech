@@ -69,7 +69,7 @@ export function Bombe() {
 
   useEffect(() => {
     drawStrip("");
-    return registerInteract("bombe", "E — run the bombe", () => {
+    return registerInteract("bombe", "E — crack the code", () => {
       if (run.current && !run.current.done) return; // not interruptible mid-run
       run.current = { started: performance.now(), printed: 0, done: false };
       drawStrip("");

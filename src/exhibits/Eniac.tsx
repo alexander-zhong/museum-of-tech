@@ -59,7 +59,7 @@ export function Eniac() {
       );
     }
     cleanups.push(
-      registerInteract("eniac-go", "E — compute", () => {
+      registerInteract("eniac-go", "E — hit GO", () => {
         if (computing.current.active) return;
         const sw = switchesRef.current;
         const a = bitsValue(sw.slice(0, 5));

@@ -79,12 +79,12 @@ interface RoomDef {
 }
 
 export const ROOMS: RoomDef[] = [
-  { id: "entry", title: "Museum of Dead Tech", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
-  { id: "eniac", title: "ENIAC — 1945", minX: -13, maxX: -3, minZ: -15, maxZ: -4 },
-  { id: "bombe", title: "Turing Bombe — 1940s", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
-  { id: "pong", title: "Pong — 1972", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },
-  { id: "agc", title: "Apollo Guidance Computer — 1969", minX: 3, maxX: 13, minZ: -26, maxZ: -15 },
-  { id: "cs", title: "Counter-Strike — 1999 · Made at SFU", minX: -5, maxX: 5, minZ: -38, maxZ: -26 },
+  { id: "entry", title: "MUSEUM OF DEAD TECH", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
+  { id: "eniac", title: "ENIAC · 1945 · THE OG", minX: -13, maxX: -3, minZ: -15, maxZ: -4 },
+  { id: "bombe", title: "THE BOMBE · 1940s · CODEBREAKER", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
+  { id: "pong", title: "PONG · 1972 · GAME ONE", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },
+  { id: "agc", title: "APOLLO AGC · 1969 · MOON COMPUTER", minX: 3, maxX: 13, minZ: -26, maxZ: -15 },
+  { id: "cs", title: "COUNTER-STRIKE · 1999 · MADE AT SFU", minX: -5, maxX: 5, minZ: -38, maxZ: -26 },
   { id: "corridor", title: "", minX: -3, maxX: 3, minZ: -26, maxZ: -4 },
 ];
 
