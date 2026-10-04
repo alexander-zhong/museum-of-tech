@@ -1,9 +1,20 @@
 import { useStore } from "../store";
 import { WEAPONS, weaponById } from "../systems/weapons";
+import { CHARACTERS } from "../world/Mascots";
 
 export function Hud() {
-  const { locked, prompt, subtitle, roomTitle, hitAt, buyMenu, weapon, armed } =
-    useStore();
+  const {
+    locked,
+    prompt,
+    subtitle,
+    roomTitle,
+    hitAt,
+    buyMenu,
+    weapon,
+    armed,
+    character,
+    set,
+  } = useStore();
 
   return (
     <div className="hud">
@@ -21,6 +32,28 @@ export function Hud() {
               <br />
               They built these first.
             </p>
+            <div className="char-select">
+              <p className="char-label">CHOOSE YOUR OTTER</p>
+              <div className="char-row">
+                {CHARACTERS.map((ch) => (
+                  <button
+                    key={ch.id}
+                    className={`char-btn${ch.id === character ? " selected" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      set({ character: ch.id });
+                    }}
+                  >
+                    <span
+                      className="char-swatch"
+                      style={{ background: ch.swatch }}
+                    />
+                    {ch.name}
+                  </button>
+                ))}
+              </div>
+              <p className="char-note">press V in-game to see yourself</p>
+            </div>
             <p className="start-cta">CLICK TO ENTER</p>
             <p className="start-controls">
               WASD move · SPACE jump (hold it to bhop) · SHIFT sprint · E interact · V camera · ESC release

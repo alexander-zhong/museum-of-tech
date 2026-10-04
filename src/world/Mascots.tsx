@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations, useTexture } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
 import * as THREE from "three";
+import { useStore } from "../store";
 import { registerInteract } from "../systems/interact";
 import { say } from "../systems/narration";
 import { feel } from "../systems/feel";
@@ -37,10 +38,67 @@ export function Sparky() {
 useGLTF.preload("/models/sparky_idle.glb");
 useGLTF.preload("/models/sparky_walk.glb");
 
-// The player's third-person body: Sparky, idle or walking with the real rig.
+// Playable otters — hue-rotations of Sparky's texture, matching the paintings.
+export const CHARACTERS = [
+  { id: "gold", name: "SPARKY", hue: 0, swatch: "#e0a33c" },
+  { id: "blue", name: "SURGE", hue: 170, swatch: "#2f7dd1" },
+  { id: "purple", name: "VOLT", hue: 230, swatch: "#8e5bd4" },
+  { id: "green", name: "OHM", hue: 90, swatch: "#52b86a" },
+];
+
+const tintCache = new Map<string, THREE.Texture>();
+
+function tintTexture(tex: THREE.Texture, hue: number): THREE.Texture {
+  if (hue === 0) return tex;
+  const key = `${tex.uuid}:${hue}`;
+  const cached = tintCache.get(key);
+  if (cached) return cached;
+  const img = tex.image as CanvasImageSource & { width: number; height: number };
+  const c = document.createElement("canvas");
+  c.width = img.width;
+  c.height = img.height;
+  const ctx = c.getContext("2d");
+  if (!ctx) return tex;
+  ctx.filter = `hue-rotate(${hue}deg)`;
+  ctx.drawImage(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.flipY = tex.flipY;
+  t.colorSpace = tex.colorSpace;
+  t.wrapS = tex.wrapS;
+  t.wrapT = tex.wrapT;
+  t.needsUpdate = true;
+  tintCache.set(key, t);
+  return t;
+}
+
+// Clone materials once, then swap their map for the tinted variant.
+function applyHue(root: THREE.Object3D, hue: number) {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    mats.forEach((m, i) => {
+      const std = m as THREE.MeshStandardMaterial;
+      if (!std.map) return;
+      if (!std.userData.cloned) {
+        const clone = std.clone();
+        clone.userData.cloned = true;
+        clone.userData.origMap = std.map;
+        if (Array.isArray(mesh.material)) mesh.material[i] = clone;
+        else mesh.material = clone;
+      }
+      const mat = (Array.isArray(mesh.material) ? mesh.material[i] : mesh.material) as THREE.MeshStandardMaterial;
+      mat.map = tintTexture(mat.userData.origMap as THREE.Texture, hue);
+      mat.needsUpdate = true;
+    });
+  });
+}
+
+// The player's third-person body: your chosen otter, idle or walking.
 export function SparkyAvatar() {
   const idle = useGLTF("/models/sparky_idle.glb");
   const walk = useGLTF("/models/sparky_walk.glb");
+  const character = useStore((s) => s.character);
   // clone so the entry-hall greeter and the player can coexist
   const idleScene = useMemo(() => SkeletonUtils.clone(idle.scene), [idle.scene]);
   const walkScene = useMemo(() => SkeletonUtils.clone(walk.scene), [walk.scene]);
@@ -61,6 +119,12 @@ export function SparkyAvatar() {
     Object.values(idleAnim.actions)[0]?.reset().play();
     Object.values(walkAnim.actions)[0]?.reset().play();
   }, [idleAnim.actions, walkAnim.actions]);
+
+  useEffect(() => {
+    const hue = CHARACTERS.find((ch) => ch.id === character)?.hue ?? 0;
+    applyHue(idleScene, hue);
+    applyHue(walkScene, hue);
+  }, [character, idleScene, walkScene]);
 
   useFrame(() => {
     const moving = feel.avatarMoving;

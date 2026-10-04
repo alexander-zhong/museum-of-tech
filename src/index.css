@@ -76,6 +76,67 @@ canvas {
   margin-bottom: 40px;
 }
 
+/* character select */
+.char-select {
+  margin-bottom: 36px;
+}
+
+.char-label {
+  color: var(--gray);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  margin-bottom: 14px;
+}
+
+.char-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.char-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 26, 33, 0.8);
+  border: 1px solid #2a3642;
+  border-radius: 6px;
+  color: var(--gray);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.char-btn:hover {
+  transform: translateY(-2px);
+  color: var(--light);
+}
+
+.char-btn.selected {
+  border-color: var(--orange);
+  color: var(--light);
+  box-shadow: 0 0 16px rgba(252, 121, 0, 0.25);
+}
+
+.char-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+.char-note {
+  color: var(--gray);
+  font-size: 11px;
+  margin-top: 12px;
+  opacity: 0.7;
+}
+
 .start-cta {
   color: var(--orange);
   font-size: 18px;

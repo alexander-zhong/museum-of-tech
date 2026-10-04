@@ -19,6 +19,7 @@ interface MuseumState {
   mode: "walk" | "pong";
   view: "first" | "third";
   weapon: string;
+  character: string;
   buyMenu: boolean;
   armed: boolean; // picked up the replica in the CS room
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
@@ -34,6 +35,7 @@ export const useStore = create<MuseumState>((set) => ({
   mode: "walk",
   view: "first",
   weapon: "pistol",
+  character: "gold",
   buyMenu: false,
   armed: false,
   hitAt: 0,
