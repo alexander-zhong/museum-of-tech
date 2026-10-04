@@ -218,6 +218,19 @@ canvas {
   color: var(--gray);
 }
 
+.skin-send {
+  font-size: 9px;
+  color: var(--blue);
+  letter-spacing: 0.08em;
+  border-top: 1px solid rgba(2, 120, 255, 0.3);
+  padding-top: 4px;
+  cursor: pointer;
+}
+
+.skin-send:hover {
+  color: var(--light);
+}
+
 .wallet-toast {
   position: absolute;
   bottom: 24px;

@@ -3,7 +3,9 @@ import { session } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { MAX_HP, resetCombat } from "../systems/combat";
 import { CHARACTERS, SKINS } from "../world/Mascots";
-import { airdrop, buySkin, initWallet } from "../systems/wallet";
+import { airdrop, buySkin, initWallet, tradeSkin } from "../systems/wallet";
+import { peers } from "../systems/net";
+import { peerLabel } from "../systems/combat";
 import { useEffect } from "react";
 import { BhopMusic } from "./BhopMusic";
 import { DeathJingle } from "./DeathJingle";
@@ -36,6 +38,7 @@ export function Hud() {
     ownedSkins,
     walletMsg,
     walletMsgAt,
+    walletMode,
     set,
   } = useStore();
 
@@ -133,11 +136,27 @@ export function Hud() {
                         <span className="skin-price">
                           {equipped ? "EQUIPPED" : owned ? "OWNED" : `${k.price} SOL`}
                         </span>
+                        {owned && peers.size > 0 && (
+                          <span
+                            className="skin-send"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const pid = [...peers.keys()][0];
+                              tradeSkin(pid, peerLabel(pid), k.id);
+                            }}
+                          >
+                            SEND → {peerLabel([...peers.keys()][0])}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
                 </div>
-                <p className="char-note">demo wallet · devnet mode when the chain cooperates</p>
+                <p className="char-note">
+                  {walletMode === "devnet"
+                    ? "burner wallet · live on Solana devnet"
+                    : "demo wallet · devnet connects when the chain answers"}
+                </p>
               </div>
             </div>
             <p className="start-cta">CLICK TO ENTER</p>

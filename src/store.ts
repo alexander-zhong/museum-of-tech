@@ -38,6 +38,7 @@ interface MuseumState {
   ownedSkins: string[];
   walletMsg: string | null;
   walletMsgAt: number;
+  walletMode: "demo" | "devnet";
   buyMenu: boolean;
   armed: boolean; // picked up the replica in the CS room
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
@@ -74,6 +75,7 @@ export const useStore = create<MuseumState>()((set) => ({
   ownedSkins: [],
   walletMsg: null,
   walletMsgAt: 0,
+  walletMode: "demo",
   buyMenu: false,
   armed: true, // everyone spawns carrying
   hitAt: 0,
