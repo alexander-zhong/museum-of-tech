@@ -37,4 +37,41 @@ function Station({ id }: { id: LessonId }) {
     <mesh position={[0, 1.65, 0.24]} userData={{ interactId: `lesson-${id}` }}><planeGeometry args={[4, 2.5]} /><meshBasicMaterial map={texture} toneMapped={false} /></mesh>
   </group>;
 }
-export function Stations() { return <>{lessons.map((l) => <Station key={l.id} id={l.id} />)}</>; }
+
+function DoorMarker({ id }: { id: LessonId }) {
+  const lesson = lessons.find((l) => l.id === id)!;
+  const room = ROOMS.find((r) => r.id === id)!;
+  const west = room.maxX < 0;
+  const texture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#101a21";
+    ctx.fillRect(0, 0, 512, 256);
+    ctx.strokeStyle = lesson.color;
+    ctx.lineWidth = 12;
+    ctx.strokeRect(6, 6, 500, 244);
+    ctx.fillStyle = lesson.color;
+    ctx.font = "bold 108px monospace";
+    ctx.fillText(String(lessons.indexOf(lesson) + 1).padStart(2, "0"), 30, 159);
+    ctx.fillStyle = "#e5edf3";
+    ctx.font = "bold 35px monospace";
+    ctx.fillText(lesson.name === "Integrated circuit" ? "CHIP" : lesson.name.toUpperCase(), 190, 110);
+    ctx.font = "23px monospace";
+    ctx.fillText("ENTER HERE", 190, 157);
+    const result = new THREE.CanvasTexture(canvas);
+    result.colorSpace = THREE.SRGBColorSpace;
+    return result;
+  }, [lesson]);
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return <mesh position={[west ? -2.82 : 2.82, 2.2, room.maxZ - 3.5]} rotation={[0, west ? Math.PI / 2 : -Math.PI / 2, 0]} raycast={() => null}>
+    <planeGeometry args={[1.8, 0.9]} />
+    <meshBasicMaterial map={texture} toneMapped={false} />
+  </mesh>;
+}
+
+export function Stations() {
+  return <>{lessons.map((l) => <group key={l.id}><Station id={l.id} /><DoorMarker id={l.id} /></group>)}</>;
+}

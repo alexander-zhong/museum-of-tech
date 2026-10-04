@@ -585,3 +585,56 @@ canvas {
   pointer-events: none;
   border: 0;
 }
+
+/* Museum navigation: top-down plan and the visitor's current position. */
+.museum-map {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 240px;
+  padding: 12px;
+  border: 1px solid #577087;
+  border-radius: 8px;
+  background: rgba(9, 20, 30, 0.92);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.museum-map-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #e5edf3;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+}
+
+.museum-map-heading span,
+.museum-map-legend {
+  color: #a9bac9;
+  font-size: 10px;
+  font-weight: normal;
+  letter-spacing: 0.02em;
+}
+
+.museum-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.map-floor { fill: #122630; }
+.map-wall { fill: #83909c; }
+.map-route { fill: none; stroke: #ffb45e; stroke-width: 2; stroke-dasharray: 4 4; opacity: 0.85; }
+.map-number { fill: #101a21; font: bold 12px monospace; text-anchor: middle; }
+.map-label { fill: #f1f6fb; font: bold 9px monospace; text-anchor: middle; paint-order: stroke; stroke: #0b1a23; stroke-width: 3px; }
+.map-player-halo { fill: #0278ff; opacity: 0.35; }
+.map-player { fill: #aee7ff; stroke: #0278ff; stroke-width: 1.5; }
+.museum-map-legend { margin-top: 2px; }
+
+@media (max-width: 680px) {
+  .museum-map { top: 10px; left: 10px; width: 170px; padding: 8px; }
+  .museum-map-heading { font-size: 10px; }
+  .museum-map-heading span, .museum-map-legend { font-size: 8px; }
+}
