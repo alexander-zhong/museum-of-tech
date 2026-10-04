@@ -204,8 +204,6 @@ export function Pong() {
           <meshStandardMaterial color="#2c2c46" />
         </mesh>
       </group>
-      {/* screen glow */}
-      <pointLight position={[0, 1.4, 1]} color="#66ff88" intensity={8} distance={5} />
     </group>
   );
 }

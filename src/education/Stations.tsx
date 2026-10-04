@@ -35,7 +35,6 @@ function Station({ id }: { id: LessonId }) {
   return <group position={[west ? room.minX + 0.7 : room.maxX - 0.7, 0, (room.minZ + room.maxZ) / 2]} rotation={[0, west ? Math.PI / 2 : -Math.PI / 2, 0]}>
     <mesh position={[0, 1.5, 0]} userData={{ interactId: `lesson-${id}` }}><boxGeometry args={[4.3, 2.8, 0.45]} /><meshStandardMaterial color="#182934" metalness={0.4} roughness={0.5} /></mesh>
     <mesh position={[0, 1.65, 0.24]} userData={{ interactId: `lesson-${id}` }}><planeGeometry args={[4, 2.5]} /><meshBasicMaterial map={texture} toneMapped={false} /></mesh>
-    <pointLight position={[0, 2, 1]} color={lesson.color} intensity={6} distance={5} />
   </group>;
 }
 export function Stations() { return <>{lessons.map((l) => <Station key={l.id} id={l.id} />)}</>; }

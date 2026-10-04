@@ -188,7 +188,6 @@ export function Agc() {
           </mesh>
         ))}
       </group>
-      <pointLight position={[0, 1.3, 1]} color="#44ff66" intensity={6} distance={4.5} />
     </group>
   );
 }

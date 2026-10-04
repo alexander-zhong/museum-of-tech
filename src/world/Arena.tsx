@@ -47,7 +47,6 @@ export function PortalGate({
         <ringGeometry args={[0.7, 1.1, 32]} />
         <meshBasicMaterial color={color} transparent opacity={0.5} />
       </mesh>
-      <pointLight position={[0, 1.6, 0.6]} color={color} intensity={10} distance={6} decay={1.8} />
     </group>
   );
 }
@@ -86,12 +85,10 @@ export function Arena() {
           </mesh>
         </group>
       ))}
-      {/* lighting: hot corners + cold center */}
-      <pointLight position={[74, 3.4, -14]} color="#fc2d5e" intensity={40} distance={22} decay={1.7} />
-      <pointLight position={[106, 3.4, -14]} color="#0278ff" intensity={40} distance={22} decay={1.7} />
-      <pointLight position={[74, 3.4, -46]} color="#0278ff" intensity={40} distance={22} decay={1.7} />
-      <pointLight position={[106, 3.4, -46]} color="#fc2d5e" intensity={40} distance={22} decay={1.7} />
-      <pointLight position={[CX, 5, CZ]} color="#fff0d0" intensity={50} distance={26} decay={1.7} />
+      {/* lighting: two hot corners + cold center (lights are the perf budget) */}
+      <pointLight position={[74, 3.4, -14]} color="#fc2d5e" intensity={55} distance={30} decay={1.6} />
+      <pointLight position={[106, 3.4, -46]} color="#0278ff" intensity={55} distance={30} decay={1.6} />
+      <pointLight position={[CX, 5, CZ]} color="#fff0d0" intensity={60} distance={28} decay={1.7} />
 
       {/* arena -> museum portal (blue, by the north wall) */}
       <PortalGate pos={[90, 0, -11.5]} color="#0278ff" />
