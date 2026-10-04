@@ -269,11 +269,15 @@ export function CsRange() {
       // did we hit another player? their hitboxes carry the peer id
       const victim = hit.object.userData.peerId as string | undefined;
       if (victim) {
+        const ray = raycaster.current.ray.direction;
+        const flat = Math.hypot(ray.x, ray.z) || 1;
         damagePlayer(
           victim,
           def.id,
           hit.object.userData.zone === "head",
           hit.distance,
+          ray.x / flat,
+          ray.z / flat,
         );
         spawnSparks(hit.point, normal, def.sparks);
         return;

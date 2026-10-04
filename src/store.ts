@@ -45,6 +45,7 @@ interface MuseumState {
   killAt: number; // last time we eliminated someone (drives the banner)
   killName: string | null;
   deathBy: string | null;
+  knock: [number, number, number, number] | null;
   feed: FeedLine[];
   set: (p: Partial<MuseumState>) => void;
 }
@@ -73,6 +74,7 @@ export const useStore = create<MuseumState>()((set) => ({
   killAt: 0,
   killName: null,
   deathBy: null,
+  knock: null,
   feed: [],
   set: (p) => set(p),
 }));

@@ -9,6 +9,10 @@ export type NetState = {
   char: string;
   mv: boolean; // moving (drives walk anim)
   hp: number; // 0 = down, waiting to respawn
+  // The shot that put us down: [dirX, dirZ, force, seed]. Observers learn
+  // about a death from this packet, not from the hit — only the victim ever
+  // sees that — so the knockdown has to ride along with hp hitting zero.
+  ko?: [number, number, number, number];
 }
 
 export type NetShot = {
@@ -22,6 +26,8 @@ export type NetHit = {
   d: number; // damage
   w: string; // weapon id
   hs: boolean; // headshot
+  dx: number; // unit horizontal direction the bullet was travelling
+  dz: number;
 }
 
 // Broadcast by the victim once its health hits zero, so the killer gets
