@@ -215,60 +215,6 @@ function Crate({ pos, size = 0.8, rotY = 0 }: { pos: [number, number, number]; s
   );
 }
 
-// ---- the Moon (AGC room) ----
-function Moon() {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame((state, dt) => {
-    if (ref.current) {
-      ref.current.rotation.y += dt * 0.15;
-      ref.current.position.y = 2.1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.06;
-    }
-  });
-  return (
-    <group position={[8, 0, -24.5]}>
-      <mesh ref={ref} position={[0, 2.1, 0]} raycast={() => null}>
-        <sphereGeometry args={[0.55, 24, 24]} />
-        <meshStandardMaterial color="#b8bcc4" roughness={1} />
-      </mesh>
-      <pointLight position={[0.9, 2.4, 0.6]} color="#cdd4e8" intensity={6} distance={5} decay={1.8} />
-    </group>
-  );
-}
-
-// ---- dead arcade cabinet (Pong room set dressing) ----
-function DeadCabinet({ pos, rotY }: { pos: [number, number, number]; rotY: number }) {
-  const tex = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 192;
-    const ctx = c.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = "#07070a";
-      ctx.fillRect(0, 0, 256, 192);
-      ctx.fillStyle = "#3a3f4a";
-      ctx.font = "bold 28px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("OUT OF", 128, 85);
-      ctx.fillText("ORDER", 128, 120);
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, []);
-  return (
-    <group position={pos} rotation={[0, rotY, 0]}>
-      <mesh position={[0, 0.95, -0.1]}>
-        <boxGeometry args={[1.3, 1.9, 0.8]} />
-        <meshStandardMaterial color="#191925" roughness={0.8} />
-      </mesh>
-      <mesh position={[0, 1.35, 0.31]}>
-        <planeGeometry args={[1.0, 0.75]} />
-        <meshBasicMaterial map={tex} toneMapped={false} />
-      </mesh>
-    </group>
-  );
-}
-
 export function Decor() {
   return (
     <group>
@@ -303,13 +249,6 @@ export function Decor() {
       <BlinkenPanel pos={[-5.5, 1.3, -4.55]} rotY={Math.PI} />
       <BlinkenPanel pos={[-8, 1.3, -14.45]} />
       <BlinkenPanel pos={[-5.5, 1.3, -14.45]} />
-
-      {/* Pong room: dead sibling cabinets */}
-      <DeadCabinet pos={[-10, 0, -17]} rotY={2.2} />
-      <DeadCabinet pos={[-10, 0, -24]} rotY={0.9} />
-
-      {/* AGC room: the Moon itself */}
-      <Moon />
 
       {/* CS room: crate stacks, as is tradition */}
       <Crate pos={[-4, 0.4, -27.5]} rotY={0.2} />

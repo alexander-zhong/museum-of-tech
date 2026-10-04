@@ -6,6 +6,7 @@ import { BhopMusic } from "./BhopMusic";
 
 export function Hud() {
   const {
+    lesson,
     locked,
     started,
     prompt,
@@ -21,7 +22,7 @@ export function Hud() {
 
   return (
     <div className="hud">
-      {!locked && started && !buyMenu && (
+      {!locked && started && !buyMenu && !lesson && (
         <div className="pause-menu">
           <div className="pause-box">
             <p className="pause-q">Back to the menu?</p>
@@ -53,9 +54,9 @@ export function Hud() {
               <span className="accent">DEAD TECH</span>
             </h1>
             <p className="start-tag">
-              You were born to build great things.
+              Recreate the breakthroughs that built your computer.
               <br />
-              They built these first.
+              Transistor → Chip → Compiler → Network.
             </p>
             <div className="char-select">
               <p className="char-label">CHOOSE YOUR OTTER</p>

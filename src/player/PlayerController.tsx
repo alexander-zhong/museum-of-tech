@@ -51,6 +51,7 @@ export function PlayerController() {
     camera.position.set(0, EYE, 0.5);
 
     const down = (e: KeyboardEvent) => {
+      if (useStore.getState().lesson) return;
       keys.current[e.code] = true;
       if (e.code === "KeyE" && lookedAt.current) {
         dispatchInteract(lookedAt.current);
@@ -60,6 +61,9 @@ export function PlayerController() {
         s.set({ view: s.view === "first" ? "third" : "first" });
       }
     };
+    const unsubscribeLesson = useStore.subscribe((state, previous) => {
+      if (state.lesson !== previous.lesson) keys.current = {};
+    });
     const up = (e: KeyboardEvent) => {
       keys.current[e.code] = false;
     };
@@ -88,6 +92,7 @@ export function PlayerController() {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       clearInterval(net);
+      unsubscribeLesson();
     };
   }, [camera]);
 
@@ -254,7 +259,7 @@ export function PlayerController() {
           3000,
         );
       }
-      if (room && room !== "entry") say(`entry-${room}`);
+      if (room && room !== "entry") say(["eniac", "bombe", "pong", "agc"].includes(room) ? `learn-${room}` : `entry-${room}`);
     }
 
     // crosshair raycast for interactables
@@ -293,7 +298,7 @@ export function PlayerController() {
         onLock={() => {
           useStore.getState().set({ locked: true, started: true });
           startAmbient();
-          say("intro");
+          say("evolution-intro");
         }}
         onUnlock={() =>
           useStore.getState().set({ locked: false, mode: "walk", prompt: null })

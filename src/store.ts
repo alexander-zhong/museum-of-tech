@@ -11,6 +11,7 @@ export type RoomId =
   | null;
 
 interface MuseumState {
+  lesson: "eniac" | "bombe" | "pong" | "agc" | null;
   locked: boolean;
   started: boolean; // entered the game at least once this session
   room: RoomId;
@@ -28,6 +29,7 @@ interface MuseumState {
 }
 
 export const useStore = create<MuseumState>()((set) => ({
+  lesson: null,
   locked: false,
   started: false,
   room: null,

@@ -5,11 +5,9 @@ import { RemotePlayers } from "./world/RemotePlayers";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { Museum } from "./world/Museum";
 import { PlayerController } from "./player/PlayerController";
-import { Pong } from "./exhibits/Pong";
-import { Eniac } from "./exhibits/Eniac";
-import { Agc } from "./exhibits/Agc";
-import { Bombe } from "./exhibits/Bombe";
 import { CsRange } from "./exhibits/CsRange";
+import { Stations } from "./education/Stations";
+import { LearningLab } from "./education/LearningLab";
 import { Hud } from "./ui/Hud";
 
 export default function App() {
@@ -27,10 +25,7 @@ export default function App() {
           <Gallery />
         </Suspense>
         <RemotePlayers />
-        <Pong />
-        <Eniac />
-        <Agc />
-        <Bombe />
+        <Stations />
         <CsRange />
         <PlayerController />
         <EffectComposer>
@@ -39,6 +34,7 @@ export default function App() {
         </EffectComposer>
       </Canvas>
       <Hud />
+      <LearningLab />
     </>
   );
 }

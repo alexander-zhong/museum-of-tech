@@ -53,18 +53,15 @@ const OBSTACLES: Wall[] = [
   { x: -9, z: -0.5, w: 0.8, d: 0.8 },
   { x: 9, z: -0.5, w: 0.8, d: 0.8 },
   // exhibit centerpieces
-  { x: -12.3, z: -9.5, w: 0.8, d: 5.4 }, // ENIAC panel
-  { x: 12.3, z: -9.5, w: 1.0, d: 3.6 }, // Bombe cabinet
-  { x: -12.15, z: -20.5, w: 1.2, d: 1.4 }, // Pong cabinet
-  { x: 12.3, z: -20.5, w: 1.0, d: 2.2 }, // AGC console
+  { x: -12.3, z: -9.5, w: 0.8, d: 4.3 }, // ENIAC panel
+  { x: 12.3, z: -9.5, w: 1.0, d: 4.3 }, // Bombe cabinet
+  { x: -12.15, z: -20.5, w: 1.2, d: 4.3 }, // Pong cabinet
+  { x: 12.3, z: -20.5, w: 1.0, d: 4.3 }, // AGC console
   // ENIAC relay panels
   { x: -8, z: -4.6, w: 1.7, d: 0.5 },
   { x: -5.5, z: -4.6, w: 1.7, d: 0.5 },
   { x: -8, z: -14.4, w: 1.7, d: 0.5 },
   { x: -5.5, z: -14.4, w: 1.7, d: 0.5 },
-  // dead arcade cabinets (Pong room)
-  { x: -10, z: -17, w: 1.4, d: 1.4 },
-  { x: -10, z: -24, w: 1.4, d: 1.4 },
   // CS room: bench + crates
   { x: 1.8, z: -28.2, w: 1.7, d: 0.7 },
   { x: -4, z: -27.5, w: 1.0, d: 1.0 },
@@ -121,10 +118,10 @@ interface RoomDef {
 
 export const ROOMS: RoomDef[] = [
   { id: "entry", title: "MUSEUM OF DEAD TECH", minX: -13, maxX: 13, minZ: -4, maxZ: 2 },
-  { id: "eniac", title: "ENIAC · 1945 · THE OG", minX: -13, maxX: -3, minZ: -15, maxZ: -4 },
-  { id: "bombe", title: "THE BOMBE · 1940s · CODEBREAKER", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
-  { id: "pong", title: "PONG · 1972 · GAME ONE", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },
-  { id: "agc", title: "APOLLO AGC · 1969 · MOON COMPUTER", minX: 3, maxX: 13, minZ: -26, maxZ: -15 },
+  { id: "eniac", title: "01 · TRANSISTOR · 1947", minX: -13, maxX: -3, minZ: -15, maxZ: -4 },
+  { id: "bombe", title: "02 · INTEGRATED CIRCUIT · 1958–1971", minX: 3, maxX: 13, minZ: -15, maxZ: -4 },
+  { id: "pong", title: "03 · COMPILER · 1952 ONWARD", minX: -13, maxX: -3, minZ: -26, maxZ: -15 },
+  { id: "agc", title: "04 · NETWORK · 1969", minX: 3, maxX: 13, minZ: -26, maxZ: -15 },
   { id: "cs", title: "COUNTER-STRIKE · 1999 · MADE AT SFU", minX: -5, maxX: 5, minZ: -38, maxZ: -26 },
   { id: "corridor", title: "", minX: -3, maxX: 3, minZ: -26, maxZ: -4 },
 ];
