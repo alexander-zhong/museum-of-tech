@@ -113,6 +113,19 @@ canvas {
   box-shadow: 0 0 6px rgba(252, 121, 0, 0.8);
 }
 
+.speedo {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  color: var(--gray);
+  opacity: 0;
+  transition: opacity 0.2s;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
 /* CS-style hitmarker: four ticks around the crosshair, flash and fade */
 .hitmarker {
   position: absolute;

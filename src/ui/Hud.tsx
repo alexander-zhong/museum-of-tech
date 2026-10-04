@@ -20,7 +20,9 @@ export function Hud() {
               They built these first.
             </p>
             <p className="start-cta">CLICK TO ENTER</p>
-            <p className="start-controls">WASD move · mouse look · E interact · ESC release</p>
+            <p className="start-controls">
+              WASD move · SPACE jump (hold it to bhop) · SHIFT sprint · E interact · ESC release
+            </p>
           </div>
         </div>
       )}
@@ -35,6 +37,7 @@ export function Hud() {
           )}
           {prompt && <div className="prompt">{prompt}</div>}
           {roomTitle && <div className="room-title">{roomTitle}</div>}
+          <div id="speedo" className="speedo" />{/* driven imperatively by PlayerController */}
         </>
       )}
 
