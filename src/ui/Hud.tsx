@@ -41,10 +41,13 @@ export function Hud() {
   } = useStore();
 
   const hpFrac = Math.max(0, Math.min(1, hp / MAX_HP));
+  const cinema = useStore((s) => s.cinema);
 
   useEffect(() => {
     initWallet();
   }, []);
+
+  if (cinema) return null; // clean frames for the montage
 
   return (
     <div className="hud">
