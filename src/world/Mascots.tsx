@@ -152,6 +152,17 @@ export function OtterRig({
   );
 }
 
+// Range target: a static otter clone that CAN catch the crosshair ray
+// (unlike avatars, which are raycast-invisible). Valorant-bot energy.
+export function TargetOtter({ hue }: { hue: number }) {
+  const idle = useGLTF("/models/sparky_idle.glb");
+  const scene = useMemo(() => SkeletonUtils.clone(idle.scene), [idle.scene]);
+  useEffect(() => {
+    applyHue(scene, hue);
+  }, [scene, hue]);
+  return <primitive object={scene} />;
+}
+
 export function hueFor(characterId: string): number {
   return CHARACTERS.find((ch) => ch.id === characterId)?.hue ?? 0;
 }
