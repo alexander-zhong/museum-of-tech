@@ -7,6 +7,7 @@ export const feel = {
   avatarMoving: false,
   avatarSpeed: 0,
   gunRecoil: 0, // third-person held-gun kick, fed by CsRange
+  cinemaPov: false, // montage POV shot: show the viewmodel while cinema runs
 };
 
 // set by PlayerController; lets UI buttons re-enter pointer lock and
