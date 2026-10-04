@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audio:rooms": "node --env-file-if-exists=.env.local scripts/generate-room-audio.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

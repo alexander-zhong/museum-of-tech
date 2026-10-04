@@ -30,3 +30,9 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## History-room narration
+
+Short ElevenLabs introductions play once per history room per game session. The shooting range and arena do not trigger introductions. Leaving a room stops its introduction. Subtitles remain available without audio files.
+
+Set `ELEVENLABS_API_KEY` in an ignored `.env.local` file, optionally set `ELEVENLABS_VOICE_ID`, then run `npm run audio:rooms`. This generates four reusable MP3 files in `public/audio/`; the API key stays out of the browser bundle. Run `npm run audio:rooms -- --force` after changing the scripts or voice. Generation uses your ElevenLabs credits.
