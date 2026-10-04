@@ -90,11 +90,11 @@ const OBSTACLES: Wall[] = [
   { x: 12.3, z: -9.5, w: 1.0, d: 4.3 }, // Bombe cabinet
   { x: -12.15, z: -20.5, w: 1.2, d: 4.3 }, // Pong cabinet
   { x: 12.3, z: -20.5, w: 1.0, d: 4.3 }, // AGC console
-  // ENIAC relay panels
-  { x: -8, z: -4.6, w: 1.7, d: 0.5 },
-  { x: -5.5, z: -4.6, w: 1.7, d: 0.5 },
-  { x: -8, z: -14.4, w: 1.7, d: 0.5 },
-  { x: -5.5, z: -14.4, w: 1.7, d: 0.5 },
+  // Educational display plinths
+  { x: -8.5, z: -14.05, w: 2.1, d: 1.7 },
+  { x: 8.5, z: -4.95, w: 2.1, d: 1.7 },
+  { x: -8.5, z: -25.05, w: 2.1, d: 1.7 },
+  { x: 8.5, z: -15.95, w: 2.1, d: 1.7 },
   // CS room: bench + crates
   { x: 1.8, z: -28.2, w: 1.7, d: 0.7 },
   { x: -4, z: -27.5, w: 1.0, d: 1.0 },

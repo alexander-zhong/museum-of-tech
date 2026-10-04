@@ -1,5 +1,4 @@
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useMemo } from "react";
 import * as THREE from "three";
 
 const GOLD = "#c9a24b";
@@ -158,44 +157,6 @@ function Banner({
   );
 }
 
-// ---- blinking server/relay panel (set dressing for the ENIAC room) ----
-function BlinkenPanel({ pos, rotY = 0 }: { pos: [number, number, number]; rotY?: number }) {
-  const mats = useRef<THREE.MeshStandardMaterial[]>([]);
-  const t = useRef(0);
-  useFrame((_, dt) => {
-    t.current += dt;
-    if (t.current > 0.18) {
-      t.current = 0;
-      mats.current.forEach((m) => {
-        if (m && Math.random() < 0.3) {
-          m.emissiveIntensity = m.emissiveIntensity > 0.5 ? 0.05 : 1.6;
-        }
-      });
-    }
-  });
-  return (
-    <group position={pos} rotation={[0, rotY, 0]}>
-      <mesh>
-        <boxGeometry args={[1.6, 2.6, 0.3]} />
-        <meshStandardMaterial color="#16161f" roughness={0.7} metalness={0.3} />
-      </mesh>
-      {Array.from({ length: 12 }, (_, i) => (
-        <mesh key={i} position={[-0.55 + (i % 4) * 0.37, 0.8 - Math.floor(i / 4) * 0.45, 0.17]}>
-          <sphereGeometry args={[0.04, 8, 8]} />
-          <meshStandardMaterial
-            ref={(m) => {
-              if (m) mats.current[i] = m;
-            }}
-            color="#331a00"
-            emissive={i % 3 === 0 ? "#ff5533" : "#ffaa33"}
-            emissiveIntensity={Math.random() > 0.5 ? 1.6 : 0.05}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 // ---- wooden crates (CS room, de_dust energy) ----
 function Crate({ pos, size = 0.8, rotY = 0 }: { pos: [number, number, number]; size?: number; rotY?: number }) {
   return (
@@ -243,12 +204,6 @@ export function Decor() {
       <RopeGuard x={-10.3} z={-9.5} width={4.4} axis="z" />
       <RopeGuard x={10.3} z={-9.5} width={3.4} axis="z" />
       <RopeGuard x={10.4} z={-20.5} width={3} axis="z" />
-
-      {/* ENIAC room: blinking relay panels fill the walls */}
-      <BlinkenPanel pos={[-8, 1.3, -4.55]} rotY={Math.PI} />
-      <BlinkenPanel pos={[-5.5, 1.3, -4.55]} rotY={Math.PI} />
-      <BlinkenPanel pos={[-8, 1.3, -14.45]} />
-      <BlinkenPanel pos={[-5.5, 1.3, -14.45]} />
 
       {/* CS room: crate stacks, as is tradition */}
       <Crate pos={[-4, 0.4, -27.5]} rotY={0.2} />

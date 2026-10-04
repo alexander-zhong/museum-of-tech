@@ -4,23 +4,7 @@ import { MeshReflectorMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { WALLS, WALL_HEIGHT } from "./layout";
 import { Decor } from "./Decor";
-
-// Fake volumetric god-ray cone under each exhibit light.
-function LightCone({ pos, color }: { pos: [number, number, number]; color: string }) {
-  return (
-    <mesh position={[pos[0], pos[1] / 2 + 0.2, pos[2]]} raycast={() => null}>
-      <coneGeometry args={[1.9, pos[1] + 0.4, 24, 1, true]} />
-      <meshBasicMaterial
-        color={color}
-        transparent
-        opacity={0.055}
-        side={THREE.DoubleSide}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-}
+import { ThemeDecor } from "./ThemeDecor";
 
 // Entry-hall centerpiece: a slowly rotating hologram.
 function Hologram() {
@@ -61,18 +45,6 @@ function Hologram() {
       <mesh ref={ring} position={[0, 1.7, 0]} rotation={[1.2, 0, 0]} raycast={() => null}>
         <torusGeometry args={[0.8, 0.012, 8, 48]} />
         <meshBasicMaterial color="#fc7900" transparent opacity={0.8} />
-      </mesh>
-      {/* beam */}
-      <mesh position={[0, 1.3, 0]} raycast={() => null}>
-        <coneGeometry args={[0.45, 1.2, 20, 1, true]} />
-        <meshBasicMaterial
-          color="#0278ff"
-          transparent
-          opacity={0.1}
-          side={THREE.DoubleSide}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
       </mesh>
       <pointLight position={[0, 1.8, 0]} color="#0278ff" intensity={10} distance={7} decay={1.8} />
     </group>
@@ -125,12 +97,12 @@ const WALL_COLOR = "#1b1b26";
 const FLOOR_COLOR = "#141419";
 const CEIL_COLOR = "#0d0d13";
 
-// Exhibit spotlight positions: one warm light per room centerpiece.
+// Soft exhibit lighting; the light sources have no visible cone meshes.
 const EXHIBIT_LIGHTS: { pos: [number, number, number]; color: string }[] = [
-  { pos: [-10.5, 3.2, -9.5], color: "#ffd9a0" }, // ENIAC
-  { pos: [10.5, 3.2, -9.5], color: "#ffd9a0" }, // Bombe
-  { pos: [-10.5, 3.2, -20.5], color: "#a0e8ff" }, // Pong (CRT blue)
-  { pos: [10.5, 3.2, -20.5], color: "#ffd9a0" }, // AGC
+  { pos: [-10.5, 3.2, -9.5], color: "#ffcb92" }, // transistor
+  { pos: [10.5, 3.2, -9.5], color: "#b8f5da" }, // integrated circuit
+  { pos: [-10.5, 3.2, -20.5], color: "#a0d0ff" }, // compiler
+  { pos: [10.5, 3.2, -20.5], color: "#cfb7ff" }, // network
   { pos: [0, 3.4, -1], color: "#fff0d0" }, // entry hall
   { pos: [0, 3.2, -15], color: "#8888aa" }, // corridor
 ];
@@ -180,13 +152,10 @@ export function Museum() {
           decay={1.6}
         />
       ))}
-      {/* god-ray cones over the four exhibits */}
-      {EXHIBIT_LIGHTS.slice(0, 4).map((l, i) => (
-        <LightCone key={`cone-${i}`} pos={l.pos} color={l.color} />
-      ))}
       <Hologram />
       <Dust />
       <Decor />
+      <ThemeDecor />
     </group>
   );
 }
