@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { ARENA, ARENA_WALLS, ARENA_COVER, WALL_HEIGHT } from "./layout";
@@ -11,11 +11,35 @@ export function PortalGate({
   pos,
   rotY = 0,
   color = "#fc7900",
+  label,
 }: {
   pos: [number, number, number];
   rotY?: number;
   color?: string;
+  label?: string;
 }) {
+  const signTexture = useMemo(() => {
+    if (!label) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 160;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+    context.fillStyle = "#101a21";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = color;
+    context.lineWidth = 8;
+    context.strokeRect(4, 4, 1016, 152);
+    context.fillStyle = color;
+    context.font = "bold 64px monospace";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(label, 512, 80, 960);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, [label, color]);
+  useEffect(() => () => signTexture?.dispose(), [signTexture]);
   const ring = useRef<THREE.Mesh>(null);
   const disc = useRef<THREE.Mesh>(null);
   useFrame((state, dt) => {
@@ -42,6 +66,12 @@ export function PortalGate({
           depthWrite={false}
         />
       </mesh>
+      {signTexture && (
+        <mesh position={[0, 3.05, 0.04]} raycast={() => null}>
+          <planeGeometry args={[3.4, 0.53]} />
+          <meshBasicMaterial map={signTexture} toneMapped={false} side={THREE.DoubleSide} />
+        </mesh>
+      )}
       {/* floor pad */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} raycast={() => null}>
         <ringGeometry args={[0.7, 1.1, 32]} />

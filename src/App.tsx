@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { Sparky, Gallery } from "./world/Mascots";
 import { RemotePlayers } from "./world/RemotePlayers";
 import { Arena, PortalGate } from "./world/Arena";
+import { PORTALS } from "./world/layout";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { Museum } from "./world/Museum";
 import { PlayerController } from "./player/PlayerController";
@@ -31,7 +32,12 @@ export default function App() {
           <RemotePlayers />
           <Arena />
           {/* museum-side gate to the arena, in the CS room */}
-          <PortalGate pos={[-4.3, 0, -32]} rotY={Math.PI / 2} color="#fc7900" />
+          <PortalGate
+            pos={[PORTALS[0].x, 0, PORTALS[0].z]}
+            rotY={-Math.PI / 2}
+            color="#fc7900"
+            label="TEAM DEATHMATCH ROOM"
+          />
           <Stations />
           <CsRange />
           <PlayerController />

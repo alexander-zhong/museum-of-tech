@@ -70,8 +70,8 @@ export const ARENA_COVER: CoverBlock[] = [
 
 // Walk-in teleporters: museum CS room <-> arena.
 export const PORTALS = [
-  { x: -4.3, z: -32, r: 1.1, tx: 90, tz: -16 }, // CS room -> arena
-  { x: 90, z: -11.5, r: 1.1, tx: -2.6, tz: -32 }, // arena -> museum
+  { x: 4.3, z: -32, r: 1.1, tx: 90, tz: -16 }, // CS room -> arena
+  { x: 90, z: -11.5, r: 1.1, tx: 2.6, tz: -32 }, // arena -> museum
 ];
 
 const R = 0.4; // player radius
@@ -99,7 +99,7 @@ const OBSTACLES: Wall[] = [
   { x: 1.8, z: -28.2, w: 1.7, d: 0.7 },
   { x: -4, z: -27.5, w: 1.0, d: 1.0 },
   { x: -4.2, z: -36.8, w: 1.0, d: 1.0 },
-  { x: 4.2, z: -33, w: 0.9, d: 0.9 },
+  { x: 4.2, z: -29.5, w: 0.9, d: 0.9 },
 ];
 const SOLIDS = [...WALLS, ...OBSTACLES, ...ARENA_WALLS, ...ARENA_COVER];
 
