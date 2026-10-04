@@ -83,7 +83,7 @@ export function PlayerController() {
         const s = useStore.getState();
         s.set({ view: s.view === "first" ? "third" : "first" });
       }
-      if (e.code === "F9") {
+      if (e.code === "KeyP") {
         const s = useStore.getState();
         s.set({ cinema: !s.cinema });
         if (!s.cinema) document.exitPointerLock();
