@@ -13,7 +13,7 @@ import {
 import { weaponById } from "./weapons";
 import { sfxDeath, sfxHeadshot, sfxHit, sfxHurt, sfxKill } from "./sfx";
 import { session } from "./feel";
-import { pointBlocked } from "../world/layout";
+import { pointBlocked, roomAt } from "../world/layout";
 import { CHARACTERS } from "../world/Mascots";
 import { say } from "./narration";
 
@@ -22,15 +22,17 @@ const RESPAWN_MS = 3000;
 const FEED_MS = 7000;
 const FEED_MAX = 5;
 
-// Respawn points, spread so you don't come back on top of your killer.
+// Arena respawn points, spread so you don't come back on top of your killer.
+// (Deaths only happen in the arena; the museum is a safe lobby.)
 const SPAWNS: [number, number][] = [
-  [0, 0.5], // entry hall
-  [-7, 0], // entry hall, west
-  [7, 0], // entry hall, east
-  [0, -12], // corridor, mid
-  [0, -22], // corridor, far
-  [-3.5, -29], // range, west lane
-  [3.5, -29], // range, east lane
+  [73, -13],
+  [107, -13],
+  [73, -47],
+  [107, -47],
+  [90, -24],
+  [90, -36],
+  [78, -33],
+  [102, -27],
 ];
 
 let deadUntil = 0;
@@ -77,6 +79,9 @@ export function damagePlayer(
 ) {
   const victim = peers.get(peerId);
   if (!victim || victim.state.hp <= 0) return;
+  // PvP only inside the arena — both shooter and victim must be there
+  if (useStore.getState().room !== "dm") return;
+  if (roomAt(victim.state.p[0], victim.state.p[2]) !== "dm") return;
   const def = weaponById(weaponId);
   const dmg = Math.max(
     1,
@@ -172,6 +177,7 @@ netHandlers.onHit = (from, hit) => {
   // is still standing in the world — and still shootable. Only the main menu
   // (never entered / left the game) is out of play.
   if (!s.started || s.dead || s.hp <= 0) return;
+  if (s.room !== "dm") return; // the museum lobby is a no-damage zone
   const hp = Math.max(0, s.hp - Math.max(0, Math.min(500, hit.d)));
   if (hp > 0) {
     s.set({ hp, hurtAt: performance.now() });

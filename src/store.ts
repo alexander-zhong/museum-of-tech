@@ -8,6 +8,7 @@ export type RoomId =
   | "pong"
   | "agc"
   | "cs"
+  | "dm"
   | null;
 
 export interface FeedLine {

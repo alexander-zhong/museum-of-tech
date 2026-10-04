@@ -3,7 +3,7 @@ import { SparkyAvatar } from "../world/Mascots";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
-import { collide, pointBlocked, roomAt, roomTitle } from "../world/layout";
+import { collide, pointBlocked, roomAt, roomTitle, PORTALS } from "../world/layout";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
@@ -49,6 +49,7 @@ export function PlayerController() {
   const jumpY = useRef(0); // height above the floor
   const lastLand = useRef(0);
   const head = useRef(new THREE.Vector3(0, EYE, 0.5)); // logical player head
+  const portalCd = useRef(0);
   const smoothY = useRef(EYE);
   const avatar = useRef<THREE.Group>(null);
   const avatarFlop = useRef<THREE.Group>(null);
@@ -321,6 +322,20 @@ export function PlayerController() {
     if (Math.abs(cam.fov - wantFov) > 0.01) {
       cam.fov = wantFov;
       cam.updateProjectionMatrix();
+    }
+
+    // walk-in portals (museum <-> arena), with a cooldown so arrival
+    // next to the return gate can't ping-pong you
+    if (state.locked && performance.now() - portalCd.current > 1500) {
+      for (const p of PORTALS) {
+        const dx = head.current.x - p.x;
+        const dz = head.current.z - p.z;
+        if (dx * dx + dz * dz < p.r * p.r) {
+          portalCd.current = performance.now();
+          session.teleport(p.tx, p.tz);
+          break;
+        }
+      }
     }
 
     // room tracking

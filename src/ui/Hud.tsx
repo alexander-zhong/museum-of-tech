@@ -13,6 +13,7 @@ export function Hud() {
     prompt,
     subtitle,
     roomTitle,
+    room,
     hitAt,
     buyMenu,
     weapon,
@@ -108,22 +109,24 @@ export function Hud() {
         <>
           {!dead && <div className="crosshair" />}
           {hurtAt > 0 && <div key={hurtAt} className="hurt-flash" />}
-          <div className="vitals">
-            <div className="hp-row">
-              <span className="hp-num">{hp}</span>
-              <div className="hp-track">
-                <div
-                  className={`hp-fill${hpFrac <= 0.3 ? " low" : ""}`}
-                  style={{ width: `${hpFrac * 100}%` }}
-                />
+          {(room === "dm" || dead) && (
+            <div className="vitals">
+              <div className="hp-row">
+                <span className="hp-num">{hp}</span>
+                <div className="hp-track">
+                  <div
+                    className={`hp-fill${hpFrac <= 0.3 ? " low" : ""}`}
+                    style={{ width: `${hpFrac * 100}%` }}
+                  />
+                </div>
+              </div>
+              <div className="kd">
+                <span className="kd-k">{kills}</span> K
+                <span className="kd-sep">/</span>
+                <span className="kd-d">{deaths}</span> D
               </div>
             </div>
-            <div className="kd">
-              <span className="kd-k">{kills}</span> K
-              <span className="kd-sep">/</span>
-              <span className="kd-d">{deaths}</span> D
-            </div>
-          </div>
+          )}
           {feed.length > 0 && (
             <div className="killfeed">
               {feed.map((f) => (
