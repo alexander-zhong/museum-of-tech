@@ -1,4 +1,5 @@
 import { useStore } from "../store";
+import { session } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
 import { CHARACTERS } from "../world/Mascots";
 import { BhopMusic } from "./BhopMusic";
@@ -6,6 +7,7 @@ import { BhopMusic } from "./BhopMusic";
 export function Hud() {
   const {
     locked,
+    started,
     prompt,
     subtitle,
     roomTitle,
@@ -19,7 +21,29 @@ export function Hud() {
 
   return (
     <div className="hud">
-      {!locked && (
+      {!locked && started && (
+        <div className="pause-menu">
+          <div className="pause-box">
+            <p className="pause-q">Back to the menu?</p>
+            <div className="pause-actions">
+              <button
+                className="pause-btn primary"
+                onClick={() => session.lock()}
+              >
+                NO, RESUME
+              </button>
+              <button
+                className="pause-btn"
+                onClick={() => set({ started: false })}
+              >
+                YES, MAIN MENU
+              </button>
+            </div>
+            <p className="pause-hint">or click anywhere to jump back in</p>
+          </div>
+        </div>
+      )}
+      {!locked && !started && (
         <div className="start-screen">
           <div className="start-inner">
             <p className="start-kicker">STORMHACKS 2026 PRESENTS</p>

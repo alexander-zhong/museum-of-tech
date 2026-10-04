@@ -8,6 +8,11 @@ export const feel = {
   avatarSpeed: 0,
 };
 
+// set by PlayerController; lets UI buttons re-enter pointer lock
+export const session = {
+  lock: () => {},
+};
+
 export function addFovKick(amount: number) {
   feel.fovKick = Math.min(6, feel.fovKick + amount);
 }

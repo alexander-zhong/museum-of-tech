@@ -8,7 +8,7 @@ import { useStore } from "../store";
 import { say } from "../systems/narration";
 import { dispatchInteract, promptFor } from "../systems/interact";
 import { sfxFootstep, startAmbient } from "../systems/sfx";
-import { feel } from "../systems/feel";
+import { feel, session } from "../systems/feel";
 import { weaponById } from "../systems/weapons";
 import { sendState } from "../systems/net";
 
@@ -283,8 +283,11 @@ export function PlayerController() {
   return (
     <>
       <PointerLockControls
+        ref={(c) => {
+          session.lock = () => c?.lock();
+        }}
         onLock={() => {
-          useStore.getState().set({ locked: true });
+          useStore.getState().set({ locked: true, started: true });
           startAmbient();
           say("intro");
         }}
