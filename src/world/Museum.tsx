@@ -1,7 +1,9 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { MeshReflectorMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { WALLS, WALL_HEIGHT } from "./layout";
+import { Decor } from "./Decor";
 
 // Fake volumetric god-ray cone under each exhibit light.
 function LightCone({ pos, color }: { pos: [number, number, number]; color: string }) {
@@ -136,10 +138,22 @@ const EXHIBIT_LIGHTS: { pos: [number, number, number]; color: string }[] = [
 export function Museum() {
   return (
     <group>
-      {/* floor */}
+      {/* floor: polished museum marble — reflections do the wow */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -18]}>
         <planeGeometry args={[26.6, 40.6]} />
-        <meshStandardMaterial color={FLOOR_COLOR} roughness={0.9} />
+        <MeshReflectorMaterial
+          color={FLOOR_COLOR}
+          resolution={512}
+          blur={[400, 120]}
+          mixBlur={0.9}
+          mixStrength={2.2}
+          roughness={0.75}
+          metalness={0.35}
+          mirror={0.5}
+          depthScale={0.6}
+          minDepthThreshold={0.4}
+          maxDepthThreshold={1.4}
+        />
       </mesh>
       {/* ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_HEIGHT, -18]}>
@@ -172,6 +186,7 @@ export function Museum() {
       ))}
       <Hologram />
       <Dust />
+      <Decor />
     </group>
   );
 }
