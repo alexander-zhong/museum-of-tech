@@ -3,7 +3,6 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { say } from "../systems/narration";
-import { registerInteract } from "../systems/interact";
 import { sfxShoot, sfxHit, sfxDing } from "../systems/sfx";
 import { addFovKick, feel } from "../systems/feel";
 import { WEAPONS, weaponById } from "../systems/weapons";
@@ -26,7 +25,7 @@ const RESET_MS = 3500;
 export function CsRange() {
   const { camera, scene } = useThree();
   const weaponId = useStore((s) => s.weapon); // re-render viewmodel on switch
-  const equipped = useRef(false);
+  const equipped = useRef(true); // armed from spawn
   const firing = useRef(false);
   const lastFire = useRef(0);
   const tryFireRef = useRef<() => void>(() => {});
@@ -130,12 +129,7 @@ export function CsRange() {
     ctx.font = "bold 44px monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#fc7900";
-    if (!equipped.current) {
-      ctx.fillText("GRAB THE REPLICA", 320, 70);
-      ctx.font = "26px monospace";
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillText("ON THE BENCH BEHIND YOU", 320, 115);
-    } else if (clearedAt.current !== null && runStart.current !== null) {
+    if (clearedAt.current !== null && runStart.current !== null) {
       const secs = ((clearedAt.current - runStart.current) / 1000).toFixed(2);
       ctx.fillText(`CLEAR  ${secs}s`, 320, 70);
       ctx.font = "26px monospace";
@@ -207,14 +201,6 @@ export function CsRange() {
 
   useEffect(() => {
     drawBoard();
-    const unregister = registerInteract("cs-gun", "E — grab the gun", () => {
-      if (equipped.current) return;
-      equipped.current = true;
-      useStore.getState().set({ armed: true });
-      if (tableGun.current) tableGun.current.visible = false;
-      say("cs-gun");
-      drawBoard();
-    });
 
     const tryFire = () => {
       const s = useStore.getState();
@@ -338,7 +324,6 @@ export function CsRange() {
     window.addEventListener("contextmenu", onContext);
     window.addEventListener("keydown", onKey);
     return () => {
-      unregister();
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("contextmenu", onContext);
@@ -414,7 +399,7 @@ export function CsRange() {
           <meshStandardMaterial color="#26262e" roughness={0.7} />
         </mesh>
         {/* pickup gun on the bench */}
-        <group ref={tableGun} position={[0, 0.98, 0]} rotation={[0, 0.9, Math.PI / 2]} userData={{ interactId: "cs-gun" }}>
+        <group ref={tableGun} position={[0, 0.98, 0]} rotation={[0, 0.9, Math.PI / 2]}>
           <mesh>
             <boxGeometry args={[0.45, 0.09, 0.08]} />
             <meshStandardMaterial color="#3a3a42" metalness={0.6} roughness={0.35} />
