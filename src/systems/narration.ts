@@ -39,6 +39,8 @@ export const LINES: Record<string, string> = {
     "You died in a museum. Respawning, because history repeats itself.",
   "pvp-first-kill":
     "You shot another visitor. In 1999 that was a mod. Today it's a Tuesday.",
+  "entry-dm":
+    "Arena's live. Museum rules stop at the door. It's not personal, it's deathmatch.",
 };
 
 // New educational scripts use new audio IDs, avoiding the old exhibit recordings.

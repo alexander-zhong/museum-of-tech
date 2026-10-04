@@ -41,6 +41,39 @@ export const WALLS: Wall[] = [
   { x: 3, z: -23.85, w: T, d: 4.3 },
 ];
 
+// ---- deathmatch arena: a separate map far east of the museum ----
+// The lobby (museum) is a no-damage zone; PvP only runs in here.
+export interface CoverBlock extends Wall {
+  h: number;
+}
+
+export const ARENA = { minX: 70, maxX: 110, minZ: -50, maxZ: -10 };
+
+export const ARENA_WALLS: Wall[] = [
+  { x: 90, z: -10, w: 40.3, d: T },
+  { x: 90, z: -50, w: 40.3, d: T },
+  { x: 70, z: -30, w: T, d: 40.3 },
+  { x: 110, z: -30, w: T, d: 40.3 },
+];
+
+export const ARENA_COVER: CoverBlock[] = [
+  { x: 90, z: -30, w: 4, d: 4, h: 2.6 }, // center block
+  { x: 80, z: -20, w: 2.4, d: 2.4, h: 1.5 },
+  { x: 100, z: -20, w: 2.4, d: 2.4, h: 1.5 },
+  { x: 80, z: -40, w: 2.4, d: 2.4, h: 1.5 },
+  { x: 100, z: -40, w: 2.4, d: 2.4, h: 1.5 },
+  { x: 74, z: -30, w: 1.6, d: 6, h: 2.2 }, // side screens
+  { x: 106, z: -30, w: 1.6, d: 6, h: 2.2 },
+  { x: 90, z: -17, w: 6, d: 1.4, h: 1.2 }, // low rails
+  { x: 90, z: -43, w: 6, d: 1.4, h: 1.2 },
+];
+
+// Walk-in teleporters: museum CS room <-> arena.
+export const PORTALS = [
+  { x: -4.3, z: -32, r: 1.1, tx: 90, tz: -16 }, // CS room -> arena
+  { x: 90, z: -11.5, r: 1.1, tx: -2.6, tz: -32 }, // arena -> museum
+];
+
 const R = 0.4; // player radius
 
 // Non-wall obstacles (pedestal, columns, exhibits, set dressing).
@@ -68,7 +101,7 @@ const OBSTACLES: Wall[] = [
   { x: -4.2, z: -36.8, w: 1.0, d: 1.0 },
   { x: 4.2, z: -33, w: 0.9, d: 0.9 },
 ];
-const SOLIDS = [...WALLS, ...OBSTACLES];
+const SOLIDS = [...WALLS, ...OBSTACLES, ...ARENA_WALLS, ...ARENA_COVER];
 
 // Slide the player out of any wall AABB (expanded by player radius).
 export function collide(px: number, pz: number): [number, number] {
@@ -124,6 +157,7 @@ export const ROOMS: RoomDef[] = [
   { id: "agc", title: "04 · NETWORK · 1969", minX: 3, maxX: 13, minZ: -26, maxZ: -15 },
   { id: "cs", title: "COUNTER-STRIKE · 1999 · MADE AT SFU", minX: -5, maxX: 5, minZ: -38, maxZ: -26 },
   { id: "corridor", title: "", minX: -3, maxX: 3, minZ: -26, maxZ: -4 },
+  { id: "dm", title: "DEATHMATCH ARENA", minX: 70, maxX: 110, minZ: -50, maxZ: -10 },
 ];
 
 export function roomAt(px: number, pz: number): RoomId {

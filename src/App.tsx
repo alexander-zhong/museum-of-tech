@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sparky, Gallery } from "./world/Mascots";
 import { RemotePlayers } from "./world/RemotePlayers";
+import { Arena, PortalGate } from "./world/Arena";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { Museum } from "./world/Museum";
 import { PlayerController } from "./player/PlayerController";
@@ -25,6 +26,9 @@ export default function App() {
           <Gallery />
         </Suspense>
         <RemotePlayers />
+        <Arena />
+        {/* museum-side gate to the arena, in the CS room */}
+        <PortalGate pos={[-4.3, 0, -32]} rotY={Math.PI / 2} color="#fc7900" />
         <Stations />
         <CsRange />
         <PlayerController />
