@@ -36,6 +36,7 @@ interface MuseumState {
   buyMenu: boolean;
   armed: boolean; // picked up the replica in the CS room
   hitAt: number; // timestamp of last confirmed target hit (drives HUD hitmarker)
+  botKillAt: number; // last range-bot takedown (drives the jingle)
   // --- PvP ---
   hp: number;
   dead: boolean;
@@ -67,6 +68,7 @@ export const useStore = create<MuseumState>()((set) => ({
   buyMenu: false,
   armed: true, // everyone spawns carrying
   hitAt: 0,
+  botKillAt: 0,
   hp: 100,
   dead: false,
   respawnIn: 0,
