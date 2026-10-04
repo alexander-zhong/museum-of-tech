@@ -232,6 +232,6 @@ netHandlers.onFrag = (victim, frag) => {
 };
 
 // dev console access for debugging
-if (import.meta.env.DEV) {
+if (typeof import.meta.env !== "undefined" && import.meta.env.DEV) {
   (window as unknown as Record<string, unknown>).__combat = { damagePlayer };
 }

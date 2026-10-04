@@ -17,7 +17,7 @@ export const session = {
 };
 
 // dev console access for debugging
-if (import.meta.env.DEV) {
+if (typeof import.meta.env !== "undefined" && import.meta.env.DEV) {
   (window as unknown as Record<string, unknown>).__session = session;
   (window as unknown as Record<string, unknown>).__feel = feel;
 }
